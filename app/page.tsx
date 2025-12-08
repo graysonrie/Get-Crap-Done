@@ -33,14 +33,14 @@ export default function Home() {
   }, [initializeStore]);
 
   useEffect(() => {
-    // Recalculate task times periodically to account for time passing
+    // Only check for completed tasks periodically, don't recalculate times
+    // Completion times should remain static once calculated
     const interval = setInterval(() => {
-      calculateTaskTimes();
       removeCompletedTasks();
     }, 1000); // Check every second
 
     return () => clearInterval(interval);
-  }, [calculateTaskTimes, removeCompletedTasks]);
+  }, [removeCompletedTasks]);
 
   const handleAddTask = () => {
     setEditingTask(null);

@@ -32,15 +32,31 @@ interface TaskStore {
 const calculateTaskTimes = (tasks: Task[]): Task[] => {
   if (tasks.length === 0) return [];
 
-  const now = Date.now();
-  let currentTime = now;
+  // Use the first task's createdAt as the base time
+  // This ensures completion times remain static once calculated
+  const baseTime = tasks[0]?.createdAt || Date.now();
+  let currentTime = baseTime;
 
   return tasks.map((task) => {
     const durationMs = (task.hours * 60 + task.minutes) * 60 * 1000;
+
+    // If task already has valid calculated times that match its duration, preserve them
+    // and use them to determine where the next task should start
+    if (
+      task.startTime > 0 &&
+      task.completionTime > 0 &&
+      task.startTime >= baseTime &&
+      Math.abs(task.completionTime - task.startTime - durationMs) < 1000
+    ) {
+      // Preserve existing times and update currentTime for next tasks
+      currentTime = task.completionTime;
+      return task;
+    }
+
+    // Calculate new times based on the base time
     const startTime = currentTime;
     const completionTime = currentTime + durationMs;
-
-    currentTime = completionTime; // Next task starts when this one completes
+    currentTime = completionTime;
 
     return {
       ...task,
@@ -60,7 +76,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       const saved = await store.get<Task[]>("tasks");
 
       if (saved) {
-        // Recalculate times for saved tasks
+        // Restore tasks with their saved times, or calculate if missing
         const tasksWithTimes = calculateTaskTimes(saved);
         set({ tasks: tasksWithTimes, store });
       } else {
@@ -88,16 +104,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ tasks: tasksWithTimes });
 
     if (store) {
-      // Save without calculated times (they'll be recalculated on load)
+      // Save tasks with their calculated times to preserve them
       const tasksToSave = tasksWithTimes.map(
-        ({ id, name, hours, minutes, createdAt }) => ({
+        ({ id, name, hours, minutes, createdAt, startTime, completionTime }) => ({
           id,
           name,
           hours,
           minutes,
           createdAt,
-          startTime: 0,
-          completionTime: 0,
+          startTime,
+          completionTime,
         })
       );
       store.set("tasks", tasksToSave);
@@ -115,15 +131,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ tasks: tasksWithTimes });
 
     if (store) {
+      // Save tasks with their calculated times to preserve them
       const tasksToSave = tasksWithTimes.map(
-        ({ id, name, hours, minutes, createdAt }) => ({
+        ({ id, name, hours, minutes, createdAt, startTime, completionTime }) => ({
           id,
           name,
           hours,
           minutes,
           createdAt,
-          startTime: 0,
-          completionTime: 0,
+          startTime,
+          completionTime,
         })
       );
       store.set("tasks", tasksToSave);
@@ -139,15 +156,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     set({ tasks: tasksWithTimes });
 
     if (store) {
+      // Save tasks with their calculated times to preserve them
       const tasksToSave = tasksWithTimes.map(
-        ({ id, name, hours, minutes, createdAt }) => ({
+        ({ id, name, hours, minutes, createdAt, startTime, completionTime }) => ({
           id,
           name,
           hours,
           minutes,
           createdAt,
-          startTime: 0,
-          completionTime: 0,
+          startTime,
+          completionTime,
         })
       );
       store.set("tasks", tasksToSave);
@@ -184,6 +202,8 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   },
 
   calculateTaskTimes: () => {
+    // This function is kept for compatibility but should only be called
+    // when tasks are added/removed/updated, not on a timer
     const { tasks } = get();
     const tasksWithTimes = calculateTaskTimes(tasks);
     set({ tasks: tasksWithTimes });
