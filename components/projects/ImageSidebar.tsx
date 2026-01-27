@@ -7,6 +7,7 @@ import type { ImagePreviewModel, FullImageModel } from "@/lib/hooks/models";
 interface ImageSidebarProps {
   imagePreviews: ImagePreviewModel[];
   selectedImage: FullImageModel | null;
+  evaluatedImageNames: string[];
   isLoading: boolean;
   onSelectImage: (imageName: string) => void;
   onDeleteImage: (imageName: string) => void;
@@ -15,6 +16,7 @@ interface ImageSidebarProps {
 export function ImageSidebar({
   imagePreviews,
   selectedImage,
+  evaluatedImageNames,
   isLoading,
   onSelectImage,
   onDeleteImage,
@@ -47,6 +49,7 @@ export function ImageSidebar({
                 key={preview.imageName}
                 preview={preview}
                 isSelected={selectedImage?.imageName === preview.imageName}
+                isEvaluated={evaluatedImageNames.includes(preview.imageName)}
                 onSelect={() => onSelectImage(preview.imageName)}
                 onDelete={() => onDeleteImage(preview.imageName)}
               />

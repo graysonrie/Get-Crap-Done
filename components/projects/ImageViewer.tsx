@@ -2,14 +2,20 @@
 
 import { Loader2, ImageIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import type { FullImageModel } from "@/lib/hooks/models";
+import { EvaluationCard } from "./EvaluationCard";
+import type { FullImageModel, ImageEvaluation } from "@/lib/hooks/models";
 
 interface ImageViewerProps {
   selectedImage: FullImageModel | null;
+  evaluation: ImageEvaluation | undefined;
   isLoading: boolean;
 }
 
-export function ImageViewer({ selectedImage, isLoading }: ImageViewerProps) {
+export function ImageViewer({
+  selectedImage,
+  evaluation,
+  isLoading,
+}: ImageViewerProps) {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
@@ -37,6 +43,11 @@ export function ImageViewer({ selectedImage, isLoading }: ImageViewerProps) {
               {formatBytes(selectedImage.imageSizeBytes)}
             </p>
           </div>
+          {evaluation && (
+            <div className="w-full max-w-md">
+              <EvaluationCard evaluation={evaluation} />
+            </div>
+          )}
         </div>
       </div>
     );

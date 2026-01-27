@@ -9,12 +9,16 @@ export default function useProjectImages() {
     activeProjectName,
     imagePreviews,
     selectedImage,
+    imageEvaluations,
     isLoadingPreviews,
     isLoadingFullImage,
+    isEvaluating,
     setImagePreviews,
     setSelectedImage,
+    setImageEvaluations,
     setIsLoadingPreviews,
     setIsLoadingFullImage,
+    setIsEvaluating,
   } = useProjectStore();
 
   const loadPreviews = useCallback(async () => {
@@ -35,9 +39,23 @@ export default function useProjectImages() {
     }
   }, [activeProjectName, setImagePreviews, setIsLoadingPreviews]);
 
+  const loadEvaluations = useCallback(async () => {
+    if (!activeProjectName) return;
+
+    try {
+      const { getImageEvaluations } = getTauriCommands();
+      const evaluations = await getImageEvaluations(activeProjectName);
+      setImageEvaluations(evaluations);
+    } catch (error) {
+      console.error("Failed to load image evaluations:", error);
+      // Don't show toast for this - evaluations file may not exist yet
+    }
+  }, [activeProjectName, setImageEvaluations]);
+
   useEffect(() => {
     loadPreviews();
-  }, [loadPreviews]);
+    loadEvaluations();
+  }, [loadPreviews, loadEvaluations]);
 
   const selectImage = useCallback(
     async (imageName: string) => {
@@ -123,15 +141,44 @@ export default function useProjectImages() {
     ]
   );
 
+  const evaluateSelectedImage = useCallback(
+    async (openAIApiKey: string) => {
+      if (!activeProjectName || !selectedImage) return;
+
+      setIsEvaluating(true);
+      try {
+        const { evaluateImages } = getTauriCommands();
+        const evaluations = await evaluateImages(activeProjectName, {
+          openaiApiKey: openAIApiKey,
+          imageNames: [selectedImage.imageName],
+        });
+        setImageEvaluations(evaluations);
+        console.log("Image evaluation result:", evaluations);
+        toast.success("Image evaluated successfully");
+      } catch (error) {
+        console.error("Failed to evaluate image:", error);
+        toast.error("Failed to evaluate image", {
+          description: String(error),
+        });
+      } finally {
+        setIsEvaluating(false);
+      }
+    },
+    [activeProjectName, selectedImage, setImageEvaluations, setIsEvaluating]
+  );
+
   return {
     activeProjectName,
     imagePreviews,
     selectedImage,
+    imageEvaluations,
     isLoadingPreviews,
     isLoadingFullImage,
+    isEvaluating,
     selectImage,
     addImages,
     deleteImage,
+    evaluateSelectedImage,
     refreshPreviews: loadPreviews,
   };
 }

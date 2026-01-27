@@ -2,18 +2,24 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Home, ImagePlus } from "lucide-react";
+import { Home, ImagePlus, Sparkles, Loader2 } from "lucide-react";
 
 interface ProjectHeaderProps {
   projectName: string;
   onGoHome: () => void;
   onAddImages: () => void;
+  onEvaluateImage: () => void;
+  canEvaluate: boolean;
+  isEvaluating: boolean;
 }
 
 export function ProjectHeader({
   projectName,
   onGoHome,
   onAddImages,
+  onEvaluateImage,
+  canEvaluate,
+  isEvaluating,
 }: ProjectHeaderProps) {
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b">
@@ -25,10 +31,25 @@ export function ProjectHeader({
         <Separator orientation="vertical" className="h-6" />
         <h1 className="text-md font-semibold pb-0.5">{projectName}</h1>
       </div>
-      <Button size="sm" onClick={onAddImages}>
-        <ImagePlus className="w-4 h-4 mr-2" />
-        Add Images
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={onEvaluateImage}
+          disabled={!canEvaluate || isEvaluating}
+        >
+          {isEvaluating ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Sparkles className="w-4 h-4 mr-2" />
+          )}
+          Evaluate Image
+        </Button>
+        <Button size="sm" onClick={onAddImages}>
+          <ImagePlus className="w-4 h-4 mr-2" />
+          Add Images
+        </Button>
+      </div>
     </div>
   );
 }
