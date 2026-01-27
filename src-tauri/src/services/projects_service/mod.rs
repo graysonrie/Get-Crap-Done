@@ -1,6 +1,14 @@
 pub mod service;
 pub mod tauri_exports;
+use ocr_image_thing::ImageEvaluationResult;
 pub use service::ProjectsService;
+
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageEvaluation {
+  pub image_name:String,
+  pub result:ImageEvaluationResult
+}
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

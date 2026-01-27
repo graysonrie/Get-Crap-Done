@@ -1,11 +1,12 @@
-use std::{collections::HashMap, io::Cursor, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, fs::File, io::BufReader, io::Cursor, path::PathBuf, sync::Arc};
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use fast_image_resize::{images::Image, ResizeAlg, ResizeOptions, Resizer};
 use futures::future::join_all;
-use image::{codecs::jpeg::JpegEncoder, GenericImageView, ImageReader};
+use image::{codecs::jpeg::JpegEncoder, DynamicImage, GenericImageView, ImageFormat, ImageReader};
 use tauri::AppHandle;
 use tokio::sync::RwLock;
+use turbojpeg::{Decompressor, PixelFormat};
 
 use crate::services::{
     app_save_service::AppSaveService,
@@ -204,7 +205,6 @@ impl ProjectsService {
         image_name: String,
         project_name: String,
     ) -> Result<(ImagePreviewModel, ImageCacheKey), String> {
-        println!("Generating preview for {}", image_name);
         let path_clone = path.clone();
         let preview = tokio::task::spawn_blocking(move || Self::generate_preview(&path_clone))
             .await
@@ -223,7 +223,6 @@ impl ProjectsService {
             width: preview.1,
             height: preview.2,
         };
-        println!("Generated preview successfully");
         Ok((model, key))
     }
 
@@ -255,12 +254,10 @@ impl ProjectsService {
             .await
             .map_err(|e| e.to_string())?;
 
-        // Get dimensions without loading full image into memory twice
-        let bytes_clone = image_bytes.clone();
+        // Get dimensions from header only (much faster than full decode)
+        let path_for_dims = full_path.clone();
         let (width, height) = tokio::task::spawn_blocking(move || {
-            image::load_from_memory(&bytes_clone)
-                .map(|img| img.dimensions())
-                .unwrap_or((0, 0))
+            image::image_dimensions(&path_for_dims).unwrap_or((0, 0))
         })
         .await
         .map_err(|e| e.to_string())?;
@@ -284,14 +281,97 @@ impl ProjectsService {
         Ok(model)
     }
 
+    /// Get ImageFormat from file extension for faster decoding
+    fn format_from_extension(path: &std::path::Path) -> Option<ImageFormat> {
+        let ext = path.extension()?.to_str()?.to_lowercase();
+        match ext.as_str() {
+            "jpg" | "jpeg" => Some(ImageFormat::Jpeg),
+            "png" => Some(ImageFormat::Png),
+            "gif" => Some(ImageFormat::Gif),
+            "webp" => Some(ImageFormat::WebP),
+            "bmp" => Some(ImageFormat::Bmp),
+            "tiff" | "tif" => Some(ImageFormat::Tiff),
+            _ => None,
+        }
+    }
+
+    /// Load JPEG using turbojpeg (SIMD-accelerated, 2-5x faster)
+    fn load_jpeg_turbo(path: &std::path::Path) -> Result<DynamicImage, String> {
+        let jpeg_data = std::fs::read(path).map_err(|e| e.to_string())?;
+
+        let mut decompressor = Decompressor::new().map_err(|e| e.to_string())?;
+        let header = decompressor
+            .read_header(&jpeg_data)
+            .map_err(|e| e.to_string())?;
+
+        let width = header.width;
+        let height = header.height;
+
+        // Pre-allocate buffer for RGBA output (4 bytes per pixel)
+        let mut pixels = vec![0u8; width * height * 4];
+
+        // Create output image wrapper
+        let output = turbojpeg::Image {
+            pixels: pixels.as_mut_slice(),
+            width,
+            height,
+            pitch: width * 4, // Row stride in bytes
+            format: PixelFormat::RGBA,
+        };
+
+        // Decompress to RGBA
+        decompressor
+            .decompress(&jpeg_data, output)
+            .map_err(|e| e.to_string())?;
+
+        // Convert to DynamicImage
+        let rgba_image = image::RgbaImage::from_raw(width as u32, height as u32, pixels)
+            .ok_or("Failed to create image from turbojpeg output")?;
+
+        Ok(DynamicImage::ImageRgba8(rgba_image))
+    }
+
+    /// Load image with format hint for faster decoding
+    /// Uses turbojpeg for JPEGs, falls back to image crate for others
+    fn load_image_fast(path: &std::path::Path) -> Result<DynamicImage, String> {
+        // Use turbojpeg for JPEG files (much faster)
+        if let Some(format) = Self::format_from_extension(path) {
+            if format == ImageFormat::Jpeg {
+                // Try turbojpeg first, fall back to image crate if it fails
+                if let Ok(img) = Self::load_jpeg_turbo(path) {
+                    return Ok(img);
+                }
+            }
+        }
+
+        // For non-JPEG formats, try format hint first, then fall back to auto-detection
+        if let Some(format) = Self::format_from_extension(path) {
+            let file = File::open(path).map_err(|e| e.to_string())?;
+            let reader = BufReader::new(file);
+            let mut img_reader = ImageReader::new(reader);
+            img_reader.set_format(format);
+
+            // Try with format hint - if it fails, fall back to auto-detection
+            if let Ok(img) = img_reader.decode() {
+                return Ok(img);
+            }
+        }
+
+        // Fallback to auto-detection (handles mismatched extensions)
+        let file = File::open(path).map_err(|e| e.to_string())?;
+        let reader = BufReader::new(file);
+        ImageReader::new(reader)
+            .with_guessed_format()
+            .map_err(|e| e.to_string())?
+            .decode()
+            .map_err(|e| e.to_string())
+    }
+
     /// Generates a thumbnail preview from an image path using fast_image_resize
     /// Returns (base64_preview, original_width, original_height)
     fn generate_preview(path: &std::path::Path) -> Result<(String, u32, u32), String> {
-        // Use ImageReader for potentially faster loading
-        let img = ImageReader::open(path)
-            .map_err(|e| e.to_string())?
-            .decode()
-            .map_err(|e| e.to_string())?;
+        // Use format hints for faster decoding
+        let img = Self::load_image_fast(path)?;
 
         let (width, height) = img.dimensions();
 
@@ -326,7 +406,6 @@ impl ProjectsService {
             );
 
             let mut resizer = Resizer::new();
-            // Use nearest neighbor for speed, or Bilinear for slightly better quality
             let options = ResizeOptions::new().resize_alg(ResizeAlg::Nearest);
             resizer
                 .resize(&src, &mut dst, &options)
