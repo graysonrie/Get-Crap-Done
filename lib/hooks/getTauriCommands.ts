@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
   FullImageModel,
+  ImageEvaluation,
   ImagePreviewModel,
   ProjectInfoModel,
+  RequestImageEvaluation,
 } from "@/lib/hooks/models";
 
 interface TauriCommands {
@@ -10,20 +12,25 @@ interface TauriCommands {
   getProject: (projectName: string) => Promise<ProjectInfoModel>;
   getProjectNames: () => Promise<string[]>;
   getImagePreviewsInProject: (
-    projectName: string,
+    projectName: string
   ) => Promise<ImagePreviewModel[]>;
   loadImageFromProject: (
     projectName: string,
-    imageName: string,
+    imageName: string
   ) => Promise<FullImageModel>;
   importImagesToProject: (
     projectName: string,
-    imagePaths: string[],
+    imagePaths: string[]
   ) => Promise<void>;
   deleteImagesFromProject: (
     projectName: string,
-    imageNames: string[],
+    imageNames: string[]
   ) => Promise<void>;
+  evaluateImages: (
+    projectName: string,
+    request: RequestImageEvaluation
+  ) => Promise<ImageEvaluation[]>;
+  getImageEvaluations: (projectName: string) => Promise<ImageEvaluation[]>;
 }
 
 export default function getTauriCommands(): TauriCommands {
@@ -42,7 +49,7 @@ export default function getTauriCommands(): TauriCommands {
         "get_image_previews_in_project",
         {
           projectName,
-        },
+        }
       );
     },
     loadImageFromProject: async (projectName: string, imageName: string) => {
@@ -51,7 +58,10 @@ export default function getTauriCommands(): TauriCommands {
         imageName,
       });
     },
-    importImagesToProject: async (projectName: string, imagePaths: string[]) => {
+    importImagesToProject: async (
+      projectName: string,
+      imagePaths: string[]
+    ) => {
       await invoke("import_images_to_project", {
         projectName,
         imagePaths,
@@ -59,11 +69,22 @@ export default function getTauriCommands(): TauriCommands {
     },
     deleteImagesFromProject: async (
       projectName: string,
-      imageNames: string[],
+      imageNames: string[]
     ) => {
       await invoke("delete_images_from_project", {
         projectName,
         imageNames,
+      });
+    },
+    evaluateImages: async (projectName: string, request: RequestImageEvaluation) => {
+      return await invoke<ImageEvaluation[]>("evaluate_images", {
+        projectName,
+        request,
+      });
+    },
+    getImageEvaluations: async (projectName: string) => {
+      return await invoke<ImageEvaluation[]>("get_image_evaluations", {
+        projectName,
       });
     },
   };

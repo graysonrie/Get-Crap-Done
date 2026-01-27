@@ -1,39 +1,12 @@
 pub mod service;
 pub mod tauri_exports;
-use ocr_image_thing::ImageEvaluationResult;
 pub use service::ProjectsService;
+mod image_loader;
+mod models;
+use image_loader::ImageLoaderComponent;
+use models::*;
+mod image_evaluations;
+use image_evaluations::ImageEvaluationsComponent;
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ImageEvaluation {
-  pub image_name:String,
-  pub result:ImageEvaluationResult
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ProjectInfoModel {
-    pub project_name: String,
-}
-
-/// Image preview with thumbnail for display in lists/grids
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct ImagePreviewModel {
-    pub image_name: String,
-    pub base64_preview: String,
-    pub image_size_bytes: u64,
-    pub width: u32,
-    pub height: u32,
-}
-
-/// Full resolution image data
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct FullImageModel {
-    pub image_name: String,
-    pub base64_image: String,
-    pub image_size_bytes: u64,
-    pub width: u32,
-    pub height: u32,
-}
+mod requests;
+use requests::*;

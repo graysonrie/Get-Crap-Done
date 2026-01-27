@@ -27,6 +27,8 @@ pub fn run() {
             load_image_from_project,
             import_images_to_project,
             delete_images_from_project,
+            evaluate_images,
+            get_image_evaluations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

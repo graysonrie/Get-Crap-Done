@@ -1,12 +1,11 @@
 use std::{
     fs,
-    io::{BufReader, BufWriter},
+    io::BufWriter,
     path::{Path, PathBuf},
 };
 
 use dirs::data_dir;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use crate::constants;
 
@@ -14,8 +13,8 @@ pub struct AppSaveService {
     pub save_dir: PathBuf,
 }
 
-impl AppSaveService {
-    pub fn new() -> Self {
+impl Default for AppSaveService {
+    fn default() -> Self {
         let save_path = AppSaveService::get_save_path_internal();
         if !save_path.exists() {
             fs::create_dir_all(save_path.clone()).expect("could not create App directory");
@@ -24,7 +23,9 @@ impl AppSaveService {
             save_dir: save_path,
         }
     }
+}
 
+impl AppSaveService {
     /// Example: `projects\project1`
     pub fn ensure_folder_created(&self, relative_path: &str) {
         let initial_path = self.save_dir.clone();

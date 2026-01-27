@@ -48,7 +48,7 @@ export default function useProjectImages() {
         const { loadImageFromProject } = getTauriCommands();
         const fullImage = await loadImageFromProject(
           activeProjectName,
-          imageName,
+          imageName
         );
         setSelectedImage(fullImage);
       } catch (error) {
@@ -60,7 +60,7 @@ export default function useProjectImages() {
         setIsLoadingFullImage(false);
       }
     },
-    [activeProjectName, setSelectedImage, setIsLoadingFullImage],
+    [activeProjectName, setSelectedImage, setIsLoadingFullImage]
   );
 
   const addImages = useCallback(async () => {
@@ -105,7 +105,7 @@ export default function useProjectImages() {
 
         // Remove from local previews list
         setImagePreviews(
-          imagePreviews.filter((p) => p.imageName !== imageName),
+          imagePreviews.filter((p) => p.imageName !== imageName)
         );
       } catch (error) {
         console.error("Failed to delete image:", error);
@@ -120,7 +120,7 @@ export default function useProjectImages() {
       imagePreviews,
       setSelectedImage,
       setImagePreviews,
-    ],
+    ]
   );
 
   return {

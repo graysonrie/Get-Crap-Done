@@ -3,7 +3,7 @@ use std::sync::Arc;
 use tauri::State;
 
 use crate::services::projects_service::{
-    FullImageModel, ImagePreviewModel, ProjectInfoModel, ProjectsService,
+    models::*, requests::RequestImageEvaluation, ProjectsService,
 };
 
 #[tauri::command]
@@ -32,7 +32,10 @@ pub async fn get_image_previews_in_project(
     service: State<'_, Arc<ProjectsService>>,
     project_name: &str,
 ) -> Result<Vec<ImagePreviewModel>, String> {
-    service.get_image_previews_in_project(project_name).await
+    service
+        .image_loader
+        .get_image_previews_in_project(project_name)
+        .await
 }
 
 #[tauri::command]
@@ -42,6 +45,7 @@ pub async fn load_image_from_project(
     image_name: &str,
 ) -> Result<FullImageModel, String> {
     service
+        .image_loader
         .load_image_from_project(project_name, image_name)
         .await
 }
@@ -53,6 +57,7 @@ pub async fn import_images_to_project(
     image_paths: Vec<String>,
 ) -> Result<(), String> {
     service
+        .image_loader
         .import_images_to_project(project_name, image_paths)
         .await
 }
@@ -64,6 +69,28 @@ pub async fn delete_images_from_project(
     image_names: Vec<String>,
 ) -> Result<(), String> {
     service
+        .image_loader
         .delete_images_from_project(project_name, image_names)
         .await
+}
+
+#[tauri::command]
+pub async fn evaluate_images(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+    request: RequestImageEvaluation,
+) -> Result<Vec<ImageEvaluation>, String> {
+    service
+        .image_evals
+        .evaluate_images(project_name, request)
+        .await
+}
+
+/// Get the existing image evaluations for the project
+#[tauri::command]
+pub async fn get_image_evaluations(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<Vec<ImageEvaluation>, String> {
+    service.image_evals.read_images_eval_json(project_name)
 }

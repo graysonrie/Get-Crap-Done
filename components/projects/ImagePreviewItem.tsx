@@ -21,7 +21,7 @@ export function ImagePreviewItem({
     <div
       className={cn(
         "group flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors",
-        isSelected && "bg-accent",
+        isSelected && "bg-accent"
       )}
     >
       <button
