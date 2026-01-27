@@ -70,8 +70,12 @@ pub async fn delete_images_from_project(
 ) -> Result<(), String> {
     service
         .image_loader
-        .delete_images_from_project(project_name, image_names)
-        .await
+        .delete_images_from_project(project_name, image_names.clone())
+        .await?;
+    service
+        .image_evals
+        .remove_evaluations_for_images(project_name, &image_names)?;
+    Ok(())
 }
 
 #[tauri::command]

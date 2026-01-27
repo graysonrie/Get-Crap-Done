@@ -26,6 +26,8 @@ export default function ProjectPage() {
     addImages,
     deleteImage,
     evaluateSelectedImage,
+    evaluateNewImages,
+    reevaluateAll,
   } = useProjectImages();
 
   // Compute list of evaluated image names for sidebar indicators
@@ -43,8 +45,14 @@ export default function ProjectPage() {
     [selectedImage, imageEvaluations]
   );
 
-  // Can evaluate if an image is selected and API key is set
-  const canEvaluate = !!selectedImage && !!openAIApiKey;
+  const hasImages = imagePreviews.length > 0;
+  const hasUnevaluatedImages = useMemo(
+    () =>
+      imagePreviews.some(
+        (p) => !evaluatedImageNames.includes(p.imageName)
+      ),
+    [imagePreviews, evaluatedImageNames]
+  );
 
   // Redirect to home if no active project
   useEffect(() => {
@@ -58,10 +66,16 @@ export default function ProjectPage() {
     router.push("/");
   };
 
-  const handleEvaluateImage = () => {
-    if (openAIApiKey) {
-      evaluateSelectedImage(openAIApiKey);
-    }
+  const handleEvaluateThisImage = () => {
+    if (openAIApiKey) evaluateSelectedImage(openAIApiKey);
+  };
+
+  const handleEvaluateNewImages = () => {
+    if (openAIApiKey) evaluateNewImages(openAIApiKey);
+  };
+
+  const handleReevaluateAll = () => {
+    if (openAIApiKey) reevaluateAll(openAIApiKey);
   };
 
   if (!activeProjectName) {
@@ -74,9 +88,14 @@ export default function ProjectPage() {
         projectName={activeProjectName}
         onGoHome={handleGoHome}
         onAddImages={addImages}
-        onEvaluateImage={handleEvaluateImage}
-        canEvaluate={canEvaluate}
+        onEvaluateThisImage={handleEvaluateThisImage}
+        onEvaluateNewImages={handleEvaluateNewImages}
+        onReevaluateAll={handleReevaluateAll}
         isEvaluating={isEvaluating}
+        canEvaluateThisImage={!!selectedImage && !!openAIApiKey}
+        hasUnevaluatedImages={hasUnevaluatedImages}
+        hasImages={hasImages}
+        hasApiKey={!!openAIApiKey}
       />
 
       <div className="flex flex-1 overflow-hidden">

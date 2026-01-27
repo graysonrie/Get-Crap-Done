@@ -45,6 +45,7 @@ export default function useProjectImages() {
     try {
       const { getImageEvaluations } = getTauriCommands();
       const evaluations = await getImageEvaluations(activeProjectName);
+      console.log("Got evaluations:", evaluations);
       setImageEvaluations(evaluations);
     } catch (error) {
       console.error("Failed to load image evaluations:", error);
@@ -141,30 +142,69 @@ export default function useProjectImages() {
     ]
   );
 
-  const evaluateSelectedImage = useCallback(
-    async (openAIApiKey: string) => {
-      if (!activeProjectName || !selectedImage) return;
+  const evaluateImagesByNames = useCallback(
+    async (openAIApiKey: string, imageNames: string[]) => {
+      if (!activeProjectName || imageNames.length === 0) return;
 
       setIsEvaluating(true);
       try {
         const { evaluateImages } = getTauriCommands();
         const evaluations = await evaluateImages(activeProjectName, {
           openaiApiKey: openAIApiKey,
-          imageNames: [selectedImage.imageName],
+          imageNames,
         });
         setImageEvaluations(evaluations);
-        console.log("Image evaluation result:", evaluations);
-        toast.success("Image evaluated successfully");
+        const count = imageNames.length;
+        toast.success(
+          count === 1 ? "Image evaluated successfully" : `${count} images evaluated successfully`
+        );
       } catch (error) {
-        console.error("Failed to evaluate image:", error);
-        toast.error("Failed to evaluate image", {
+        console.error("Failed to evaluate images:", error);
+        toast.error("Failed to evaluate images", {
           description: String(error),
         });
       } finally {
         setIsEvaluating(false);
       }
     },
-    [activeProjectName, selectedImage, setImageEvaluations, setIsEvaluating]
+    [activeProjectName, setImageEvaluations, setIsEvaluating]
+  );
+
+  const evaluateSelectedImage = useCallback(
+    async (openAIApiKey: string) => {
+      if (!selectedImage) return;
+      await evaluateImagesByNames(openAIApiKey, [selectedImage.imageName]);
+    },
+    [selectedImage, evaluateImagesByNames]
+  );
+
+  const evaluateNewImages = useCallback(
+    async (openAIApiKey: string) => {
+      if (!activeProjectName) return;
+      const evaluatedNames = imageEvaluations.map((e) => e.imageName);
+      const toEval = imagePreviews
+        .filter((p) => !evaluatedNames.includes(p.imageName))
+        .map((p) => p.imageName);
+      if (toEval.length === 0) {
+        toast.info("No unevaluated images");
+        return;
+      }
+      await evaluateImagesByNames(openAIApiKey, toEval);
+    },
+    [activeProjectName, imagePreviews, imageEvaluations, evaluateImagesByNames]
+  );
+
+  const reevaluateAll = useCallback(
+    async (openAIApiKey: string) => {
+      if (!activeProjectName) return;
+      const toEval = imagePreviews.map((p) => p.imageName);
+      if (toEval.length === 0) {
+        toast.info("No images in project");
+        return;
+      }
+      await evaluateImagesByNames(openAIApiKey, toEval);
+    },
+    [activeProjectName, imagePreviews, evaluateImagesByNames]
   );
 
   return {
@@ -179,6 +219,8 @@ export default function useProjectImages() {
     addImages,
     deleteImage,
     evaluateSelectedImage,
+    evaluateNewImages,
+    reevaluateAll,
     refreshPreviews: loadPreviews,
   };
 }

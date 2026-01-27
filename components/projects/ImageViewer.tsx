@@ -29,14 +29,16 @@ export function ImageViewer({
 
   if (selectedImage) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-        <div className="flex flex-col items-center gap-4 max-h-full max-w-full">
-          <img
-            src={`data:image/jpeg;base64,${selectedImage.base64Image}`}
-            alt={selectedImage.imageName}
-            className="max-h-[calc(100vh-12rem)] max-w-full object-contain rounded-lg shadow-lg"
-          />
-          <div className="text-center">
+      <div className="flex-1 flex flex-col min-h-0 p-4 overflow-y-auto">
+        <div className="flex flex-1 flex-col items-center gap-4 min-h-0">
+          <div className="flex-1 min-h-0 flex items-center justify-center w-full">
+            <img
+              src={`data:image/jpeg;base64,${selectedImage.base64Image}`}
+              alt={selectedImage.imageName}
+              className="max-h-full max-w-full object-contain rounded-lg shadow-lg"
+            />
+          </div>
+          <div className="shrink-0 text-center">
             <p className="font-medium">{selectedImage.imageName}</p>
             <p className="text-sm text-muted-foreground">
               {selectedImage.width} x {selectedImage.height} &bull;{" "}
@@ -44,7 +46,7 @@ export function ImageViewer({
             </p>
           </div>
           {evaluation && (
-            <div className="w-full max-w-md">
+            <div className="shrink-0 w-full max-w-md">
               <EvaluationCard evaluation={evaluation} />
             </div>
           )}
