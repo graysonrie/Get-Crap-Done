@@ -13,10 +13,10 @@
     "windows": [
       {
         "title": "Get Crap Done",
-        "width": 400,
-        "height": 600,
+        "width": 500,
+        "height": 500,
         "minWidth": 400,
-        "minHeight": 600,
+        "minHeight": 400,
         "resizable": true,
         "fullscreen": false,
         "transparent": true,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Minimize2, Maximize2, X, ListCheck } from "lucide-react";
+import { Minimize2, Maximize2, X, ListCheck, Magnet, Minimize, Minus, Maximize, Image } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +23,11 @@ export function TitleBar() {
   return (
     <div
       data-tauri-drag-region
-      className="flex h-10 items-center justify-between border-b bg-background px-4"
+      className="flex h-10 items-center justify-between  bg-background px-4"
     >
       <div className="flex items-center gap-2 text-primary">
-        <ListCheck className="w-4" />
-        <span className="text-sm font-medium font-mono">Get Crap Done</span>
+        <Image className="w-4" />
+        <span className="text-sm font-medium font-sans select-none">Ben's Image Scanner</span>
       </div>
       <div className="flex items-center gap-1">
         <button
@@ -39,7 +39,7 @@ export function TitleBar() {
           )}
           aria-label="Minimize"
         >
-          <Minimize2 className="h-4 w-4" />
+          <Minus className="h-4 w-4" />
         </button>
         <button
           onClick={handleMaximize}
@@ -50,7 +50,7 @@ export function TitleBar() {
           )}
           aria-label="Maximize"
         >
-          <Maximize2 className="h-4 w-4" />
+          <Maximize className="h-4 w-4" />
         </button>
         <button
           onClick={handleClose}

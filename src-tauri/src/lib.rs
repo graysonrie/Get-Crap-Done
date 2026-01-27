@@ -1,7 +1,12 @@
+mod app_service_container;
+mod constants;
+mod services;
+pub use services::projects_service::tauri_exports::*;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_autostart::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -11,8 +16,18 @@ pub fn run() {
                         .build(),
                 )?;
             }
+            app_service_container::initialize_app(app.handle());
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            new_project,
+            get_project,
+            get_project_names,
+            get_image_previews_in_project,
+            load_image_from_project,
+            import_images_to_project,
+            delete_images_from_project,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
