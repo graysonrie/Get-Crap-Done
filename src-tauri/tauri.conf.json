@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Get Crap Done",
+  "productName": "Ben's Image Scanner",
   "version": "0.1.0",
-  "identifier": "com.getcrapdone.dev",
+  "identifier": "com.bensimagescanner.dev",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Get Crap Done",
+        "title": "Ben's Image Scanner",
         "width": 500,
         "height": 500,
         "minWidth": 400,
