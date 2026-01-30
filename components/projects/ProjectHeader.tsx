@@ -69,9 +69,9 @@ export function ProjectHeader({
     <>
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onGoHome}>
-            <Home className="w-4 h-4 mr-2" />
-            Home
+          <Button variant="ghost" size="sm" onClick={onGoHome} title="Home">
+            <Home className="w-4 h-4 shrink-0 sm:mr-2" />
+            <span className="hidden sm:inline">Home</span>
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <h1 className="text-md font-semibold pb-0.5">{projectName}</h1>
@@ -82,9 +82,10 @@ export function ProjectHeader({
               size="sm"
               variant="secondary"
               onClick={onExport}
+              title="Export"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Export
+              <Download className="w-4 h-4 shrink-0 sm:mr-2" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
           )}
           <DropdownMenu>
@@ -93,14 +94,15 @@ export function ProjectHeader({
                 size="sm"
                 variant="secondary"
                 disabled={!evaluateDropdownEnabled}
+                title="Evaluate"
               >
                 {isEvaluating ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 shrink-0 sm:mr-2 animate-spin" />
                 ) : (
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 shrink-0 sm:mr-2" />
                 )}
-                Evaluate
-                <ChevronDown className="w-4 h-4 ml-1 opacity-60" />
+                <span className="hidden sm:inline">Evaluate</span>
+                <ChevronDown className="hidden w-4 h-4 sm:block ml-1 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -124,9 +126,9 @@ export function ProjectHeader({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button size="sm" onClick={onAddImages}>
-            <ImagePlus className="w-4 h-4 mr-2" />
-            Add Images
+          <Button size="sm" onClick={onAddImages} title="Add Images">
+            <ImagePlus className="w-4 h-4 shrink-0 sm:mr-2" />
+            <span className="hidden sm:inline">Add Images</span>
           </Button>
         </div>
       </div>

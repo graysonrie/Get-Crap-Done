@@ -1,7 +1,15 @@
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::*;
 use crate::services::app_save_service::AppSaveService;
+
+fn now_secs() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
 
 pub struct ProjectsService {
     app_save: Arc<AppSaveService>,
@@ -34,6 +42,7 @@ impl ProjectsService {
 
         let model = ProjectInfoModel {
             project_name: project_name.to_string(),
+            last_opened_at: Some(now_secs()),
         };
         self.app_save
             .save_json(&info_path, &model)
@@ -55,12 +64,31 @@ impl ProjectsService {
     pub fn get_project_names(&self) -> Result<Vec<String>, String> {
         let relative_path = "projects";
         let items = self.app_save.get_items_in_folder(relative_path)?;
-        let items = items
-            .iter()
-            .filter(|p| p.is_dir())
-            .filter_map(|p| p.file_name())
-            .map(|name| name.to_string_lossy().to_string())
-            .collect();
-        Ok(items)
+        let mut names_with_ts: Vec<(String, u64)> = Vec::new();
+        for path in items.iter().filter(|p| p.is_dir()) {
+            let name = match path.file_name() {
+                Some(n) => n.to_string_lossy().to_string(),
+                None => continue,
+            };
+            let info_path = format!("projects/{name}/info.imgreader");
+            let ts = self
+                .app_save
+                .read_json::<ProjectInfoModel>(&info_path)
+                .ok()
+                .and_then(|info| info.last_opened_at)
+                .unwrap_or(0);
+            names_with_ts.push((name, ts));
+        }
+        names_with_ts.sort_by(|a, b| b.1.cmp(&a.1));
+        Ok(names_with_ts.into_iter().map(|(n, _)| n).collect())
+    }
+
+    /// Records that a project was opened (updates last_opened_at for sorting).
+    pub fn record_project_opened(&self, project_name: &str) -> Result<(), String> {
+        let info_path = format!("projects/{project_name}/info.imgreader");
+        let mut info = self.app_save.read_json::<ProjectInfoModel>(&info_path)?;
+        info.last_opened_at = Some(now_secs());
+        self.app_save.save_json(&info_path, &info)?;
+        Ok(())
     }
 }

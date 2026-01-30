@@ -35,7 +35,13 @@ export default function useProjects() {
   );
 
   const selectProject = useCallback(
-    (projectName: string) => {
+    async (projectName: string) => {
+      try {
+        const { recordProjectOpened } = getTauriCommands();
+        await recordProjectOpened(projectName);
+      } catch (error) {
+        console.error("Failed to record project opened:", error);
+      }
       setActiveProject(projectName);
     },
     [setActiveProject],

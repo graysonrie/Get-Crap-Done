@@ -11,6 +11,7 @@ interface TauriCommands {
   newProject: (projectName: string) => Promise<ProjectInfoModel>;
   getProject: (projectName: string) => Promise<ProjectInfoModel>;
   getProjectNames: () => Promise<string[]>;
+  recordProjectOpened: (projectName: string) => Promise<void>;
   getImagePreviewsInProject: (
     projectName: string
   ) => Promise<ImagePreviewModel[]>;
@@ -50,6 +51,9 @@ export default function getTauriCommands(): TauriCommands {
     },
     getProjectNames: async () => {
       return await invoke<string[]>("get_project_names");
+    },
+    recordProjectOpened: async (projectName: string) => {
+      await invoke("record_project_opened", { projectName });
     },
     getImagePreviewsInProject: async (projectName: string) => {
       return await invoke<ImagePreviewModel[]>(

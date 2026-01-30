@@ -19,8 +19,8 @@ export default function ProjectsViewer() {
     router.push("/project");
   };
 
-  const handleProjectClick = (projectName: string) => {
-    selectProject(projectName);
+  const handleProjectClick = async (projectName: string) => {
+    await selectProject(projectName);
     router.push("/project");
   };
 

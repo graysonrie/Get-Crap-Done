@@ -29,6 +29,14 @@ pub fn get_project_names(service: State<'_, Arc<ProjectsService>>) -> Result<Vec
 }
 
 #[tauri::command]
+pub fn record_project_opened(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<(), String> {
+    service.record_project_opened(project_name)
+}
+
+#[tauri::command]
 pub async fn get_image_previews_in_project(
     service: State<'_, Arc<ProjectsService>>,
     project_name: &str,

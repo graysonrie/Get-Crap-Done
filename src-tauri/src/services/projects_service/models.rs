@@ -14,6 +14,9 @@ pub struct ImageEvaluation {
 #[serde(rename_all = "camelCase")]
 pub struct ProjectInfoModel {
     pub project_name: String,
+    /// Unix timestamp (seconds) when the project was last opened. None for older projects.
+    #[serde(default)]
+    pub last_opened_at: Option<u64>,
 }
 
 /// Image preview with thumbnail for display in lists/grids
