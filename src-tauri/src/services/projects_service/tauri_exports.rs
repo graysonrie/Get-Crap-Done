@@ -98,3 +98,16 @@ pub async fn get_image_evaluations(
 ) -> Result<Vec<ImageEvaluation>, String> {
     service.image_evals.read_images_eval_json(project_name)
 }
+
+/// Get the existing image evaluations for the project
+#[tauri::command]
+pub async fn export_evaluated_images(
+    service: State<'_, Arc<ProjectsService>>,
+    evaluations: Vec<ImageEvaluation>,
+    output_dir_path: &str,
+) -> Result<Vec<String>, String> {
+    service
+        .image_exporter
+        .export_evaluated_images(evaluations, output_dir_path)
+        .map_err(|e| e.to_string())
+}

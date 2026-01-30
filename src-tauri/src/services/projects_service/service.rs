@@ -7,16 +7,19 @@ pub struct ProjectsService {
     app_save: Arc<AppSaveService>,
     pub image_loader: ImageLoaderComponent,
     pub image_evals: ImageEvaluationsComponent,
+    pub image_exporter: ImageExporterComponent,
 }
 
 impl ProjectsService {
     pub fn new(app_save: Arc<AppSaveService>) -> Self {
         let image_loader = ImageLoaderComponent::new(app_save.clone());
         let image_evals = ImageEvaluationsComponent::new(app_save.clone());
+        let image_exporter = ImageExporterComponent::default();
         Self {
             app_save,
             image_loader,
             image_evals,
+            image_exporter,
         }
     }
 

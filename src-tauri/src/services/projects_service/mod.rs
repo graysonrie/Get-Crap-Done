@@ -6,5 +6,6 @@ mod models;
 use components::image_loader::ImageLoaderComponent;
 use models::*;
 use components::image_evaluations::ImageEvaluationsComponent;
+use components::image_exporter::ImageExporterComponent;
 
 mod requests;

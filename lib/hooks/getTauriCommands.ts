@@ -31,6 +31,11 @@ interface TauriCommands {
     request: RequestImageEvaluation
   ) => Promise<ImageEvaluation[]>;
   getImageEvaluations: (projectName: string) => Promise<ImageEvaluation[]>;
+  /** Export the images to their own folder with their new filepath suffixes defined in the ImageEvalution models */
+  exportEvaluatedImages: (
+    evaluations: ImageEvaluation[],
+    outputDirPath: string
+  ) => Promise<string[]>;
 }
 
 export default function getTauriCommands(): TauriCommands {
@@ -76,7 +81,10 @@ export default function getTauriCommands(): TauriCommands {
         imageNames,
       });
     },
-    evaluateImages: async (projectName: string, request: RequestImageEvaluation) => {
+    evaluateImages: async (
+      projectName: string,
+      request: RequestImageEvaluation
+    ) => {
       return await invoke<ImageEvaluation[]>("evaluate_images", {
         projectName,
         request,
@@ -85,6 +93,15 @@ export default function getTauriCommands(): TauriCommands {
     getImageEvaluations: async (projectName: string) => {
       return await invoke<ImageEvaluation[]>("get_image_evaluations", {
         projectName,
+      });
+    },
+    exportEvaluatedImages: async (
+      evaluations: ImageEvaluation[],
+      outputDirPath: string
+    ) => {
+      return await invoke<string[]>("export_evaluated_images", {
+        evaluations,
+        outputDirPath,
       });
     },
   };
