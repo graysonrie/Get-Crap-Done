@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { ImageSidebar } from "@/components/projects/ImageSidebar";
 import { ImageViewer } from "@/components/projects/ImageViewer";
+import { ExportEvaluationsModal } from "@/components/projects/ExportEvaluationsModal";
+import { ExportResultModal } from "@/components/projects/ExportResultModal";
 import useProjectImages from "@/components/projects/useProjectImages";
 import useOpenAIApiKey from "@/lib/hooks/useOpenAIApiKey";
 import { useProjectStore } from "@/lib/stores/projectStore";
@@ -36,6 +38,15 @@ export default function ProjectPage() {
     [imageEvaluations]
   );
 
+  // Evaluated images that have a suggested filename suffix (green check vs yellow warning)
+  const evaluatedWithSuffixImageNames = useMemo(
+    () =>
+      imageEvaluations
+        .filter((e) => e.result?.newSuggestedFilepathSuffix)
+        .map((e) => e.imageName),
+    [imageEvaluations]
+  );
+
   // Get evaluation for currently selected image
   const selectedImageEvaluation = useMemo(
     () =>
@@ -46,6 +57,7 @@ export default function ProjectPage() {
   );
 
   const hasImages = imagePreviews.length > 0;
+  const hasEvaluatedImages = imageEvaluations.length > 0;
   const hasUnevaluatedImages = useMemo(
     () =>
       imagePreviews.some(
@@ -53,6 +65,19 @@ export default function ProjectPage() {
       ),
     [imagePreviews, evaluatedImageNames]
   );
+
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportResultOpen, setExportResultOpen] = useState(false);
+  const [exportResultErrors, setExportResultErrors] = useState<string[]>([]);
+  const [exportResultPath, setExportResultPath] = useState<string>("");
+
+  const handleExport = () => setExportModalOpen(true);
+
+  const handleExportComplete = (errors: string[], outputPath: string) => {
+    setExportResultErrors(errors);
+    setExportResultPath(outputPath);
+    setExportResultOpen(true);
+  };
 
   // Redirect to home if no active project
   useEffect(() => {
@@ -91,11 +116,28 @@ export default function ProjectPage() {
         onEvaluateThisImage={handleEvaluateThisImage}
         onEvaluateNewImages={handleEvaluateNewImages}
         onReevaluateAll={handleReevaluateAll}
+        onExport={handleExport}
         isEvaluating={isEvaluating}
         canEvaluateThisImage={!!selectedImage && !!openAIApiKey}
         hasUnevaluatedImages={hasUnevaluatedImages}
         hasImages={hasImages}
         hasApiKey={!!openAIApiKey}
+        hasEvaluatedImages={hasEvaluatedImages}
+      />
+
+      <ExportEvaluationsModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        projectName={activeProjectName}
+        evaluations={imageEvaluations}
+        onExportComplete={handleExportComplete}
+      />
+
+      <ExportResultModal
+        open={exportResultOpen}
+        onOpenChange={setExportResultOpen}
+        errors={exportResultErrors}
+        outputPath={exportResultPath}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -103,6 +145,7 @@ export default function ProjectPage() {
           imagePreviews={imagePreviews}
           selectedImage={selectedImage}
           evaluatedImageNames={evaluatedImageNames}
+          evaluatedWithSuffixImageNames={evaluatedWithSuffixImageNames}
           isLoading={isLoadingPreviews}
           onSelectImage={selectImage}
           onDeleteImage={deleteImage}

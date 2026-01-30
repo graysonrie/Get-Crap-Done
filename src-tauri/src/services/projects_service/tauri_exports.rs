@@ -1,3 +1,4 @@
+use std::process::Command;
 use std::sync::Arc;
 
 use tauri::State;
@@ -99,7 +100,7 @@ pub async fn get_image_evaluations(
     service.image_evals.read_images_eval_json(project_name)
 }
 
-/// Get the existing image evaluations for the project
+/// Export evaluated images to a directory
 #[tauri::command]
 pub async fn export_evaluated_images(
     service: State<'_, Arc<ProjectsService>>,
@@ -110,4 +111,31 @@ pub async fn export_evaluated_images(
         .image_exporter
         .export_evaluated_images(evaluations, output_dir_path)
         .map_err(|e| e.to_string())
+}
+
+/// Open a path (file or directory) in the system's default file manager
+#[tauri::command]
+pub fn open_path_in_file_manager(path: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("explorer")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        Command::new("xdg-open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }

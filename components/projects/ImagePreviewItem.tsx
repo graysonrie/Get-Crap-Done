@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, CheckCircle2 } from "lucide-react";
+import { Trash2, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImagePreviewModel } from "@/lib/hooks/models";
 
@@ -8,6 +8,8 @@ interface ImagePreviewItemProps {
   preview: ImagePreviewModel;
   isSelected: boolean;
   isEvaluated: boolean;
+  /** When true (and isEvaluated), show green check; when false but isEvaluated, show yellow warning */
+  hasSuggestedSuffix: boolean;
   onSelect: () => void;
   onDelete: () => void;
 }
@@ -16,6 +18,7 @@ export function ImagePreviewItem({
   preview,
   isSelected,
   isEvaluated,
+  hasSuggestedSuffix,
   onSelect,
   onDelete,
 }: ImagePreviewItemProps) {
@@ -38,7 +41,11 @@ export function ImagePreviewItem({
           />
           {isEvaluated && (
             <div className="absolute -top-1 -right-1 bg-background rounded-full">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              {hasSuggestedSuffix ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-yellow-500" />
+              )}
             </div>
           )}
         </div>

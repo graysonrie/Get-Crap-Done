@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Home, ImagePlus, Sparkles, Loader2, ChevronDown } from "lucide-react";
+import { Home, ImagePlus, Sparkles, Loader2, ChevronDown, Download } from "lucide-react";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -28,11 +28,13 @@ interface ProjectHeaderProps {
   onEvaluateThisImage: () => void;
   onEvaluateNewImages: () => void;
   onReevaluateAll: () => void;
+  onExport: () => void;
   isEvaluating: boolean;
   canEvaluateThisImage: boolean;
   hasUnevaluatedImages: boolean;
   hasImages: boolean;
   hasApiKey: boolean;
+  hasEvaluatedImages: boolean;
 }
 
 export function ProjectHeader({
@@ -42,11 +44,13 @@ export function ProjectHeader({
   onEvaluateThisImage,
   onEvaluateNewImages,
   onReevaluateAll,
+  onExport,
   isEvaluating,
   canEvaluateThisImage,
   hasUnevaluatedImages,
   hasImages,
   hasApiKey,
+  hasEvaluatedImages,
 }: ProjectHeaderProps) {
   const [reevaluateDialogOpen, setReevaluateDialogOpen] = useState(false);
 
@@ -73,6 +77,16 @@ export function ProjectHeader({
           <h1 className="text-md font-semibold pb-0.5">{projectName}</h1>
         </div>
         <div className="flex items-center gap-2">
+          {hasEvaluatedImages && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onExport}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

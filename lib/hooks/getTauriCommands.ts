@@ -31,11 +31,13 @@ interface TauriCommands {
     request: RequestImageEvaluation
   ) => Promise<ImageEvaluation[]>;
   getImageEvaluations: (projectName: string) => Promise<ImageEvaluation[]>;
-  /** Export the images to their own folder with their new filepath suffixes defined in the ImageEvalution models */
+  /** Export the images to their own folder with their new filepath suffixes defined in the ImageEvaluation models. Returns list of error messages (empty on full success). */
   exportEvaluatedImages: (
     evaluations: ImageEvaluation[],
     outputDirPath: string
   ) => Promise<string[]>;
+  /** Open a path in the system file manager */
+  openPathInFileManager: (path: string) => Promise<void>;
 }
 
 export default function getTauriCommands(): TauriCommands {
@@ -103,6 +105,9 @@ export default function getTauriCommands(): TauriCommands {
         evaluations,
         outputDirPath,
       });
+    },
+    openPathInFileManager: async (path: string) => {
+      await invoke("open_path_in_file_manager", { path });
     },
   };
 }

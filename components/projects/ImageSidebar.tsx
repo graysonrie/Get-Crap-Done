@@ -8,6 +8,8 @@ interface ImageSidebarProps {
   imagePreviews: ImagePreviewModel[];
   selectedImage: FullImageModel | null;
   evaluatedImageNames: string[];
+  /** Image names that have a suggested filename suffix (subset of evaluated) */
+  evaluatedWithSuffixImageNames: string[];
   isLoading: boolean;
   onSelectImage: (imageName: string) => void;
   onDeleteImage: (imageName: string) => void;
@@ -17,6 +19,7 @@ export function ImageSidebar({
   imagePreviews,
   selectedImage,
   evaluatedImageNames,
+  evaluatedWithSuffixImageNames,
   isLoading,
   onSelectImage,
   onDeleteImage,
@@ -50,6 +53,9 @@ export function ImageSidebar({
                 preview={preview}
                 isSelected={selectedImage?.imageName === preview.imageName}
                 isEvaluated={evaluatedImageNames.includes(preview.imageName)}
+                hasSuggestedSuffix={evaluatedWithSuffixImageNames.includes(
+                  preview.imageName
+                )}
                 onSelect={() => onSelectImage(preview.imageName)}
                 onDelete={() => onDeleteImage(preview.imageName)}
               />
