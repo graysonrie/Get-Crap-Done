@@ -20,7 +20,7 @@ impl ImageExporterComponent {
         let mut errors = Vec::new();
         let mut used_names: HashSet<String> = HashSet::new();
 
-        const UNKNOWN_SUFFIX: &str = "_UNKNOWN";
+        const UNKNOWN_SUFFIX: &str = "";
 
         for eval in evaluations.iter() {
             if let Some(ref res) = eval.result {
@@ -33,7 +33,9 @@ impl ImageExporterComponent {
                     .file_stem()
                     .map(|s| s.to_string_lossy().to_string())
                     .unwrap_or_default();
-                let ext = original_path.extension().map(|e| e.to_string_lossy().to_string());
+                let ext = original_path
+                    .extension()
+                    .map(|e| e.to_string_lossy().to_string());
                 let base_without_ext = format!("{}{}", stem, suffix);
                 let base_name = match &ext {
                     Some(e) => format!("{}.{}", base_without_ext, e),
@@ -41,9 +43,7 @@ impl ImageExporterComponent {
                 };
                 let mut candidate = base_name.clone();
                 let mut counter = 2u32;
-                while used_names.contains(&candidate)
-                    || out_dir.join(&candidate).exists()
-                {
+                while used_names.contains(&candidate) || out_dir.join(&candidate).exists() {
                     candidate = match &ext {
                         Some(e) => format!("{}_{}.{}", base_without_ext, counter, e),
                         None => format!("{}_{}", base_without_ext, counter),
