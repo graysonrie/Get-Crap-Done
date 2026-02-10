@@ -37,6 +37,45 @@ pub fn record_project_opened(
 }
 
 #[tauri::command]
+pub fn delete_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<(), String> {
+    service.delete_project(project_name)
+}
+
+#[tauri::command]
+pub fn archive_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<(), String> {
+    service.archive_project(project_name)
+}
+
+#[tauri::command]
+pub fn unarchive_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<(), String> {
+    service.unarchive_project(project_name)
+}
+
+#[tauri::command]
+pub fn get_archived_project_names(
+    service: State<'_, Arc<ProjectsService>>,
+) -> Result<Vec<String>, String> {
+    service.get_archived_project_names()
+}
+
+#[tauri::command]
+pub fn delete_archived_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<(), String> {
+    service.delete_archived_project(project_name)
+}
+
+#[tauri::command]
 pub async fn get_image_previews_in_project(
     service: State<'_, Arc<ProjectsService>>,
     project_name: &str,

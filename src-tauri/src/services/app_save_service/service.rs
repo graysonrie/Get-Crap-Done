@@ -92,6 +92,21 @@ impl AppSaveService {
         fs::remove_file(full_path).map_err(|e| e.to_string())
     }
 
+    /// Deletes a folder and all its contents at the relative path
+    /// Example: `projects\project1`
+    pub fn delete_folder(&self, relative_path: &str) -> Result<(), String> {
+        let full_path = self.save_dir.join(Path::new(relative_path));
+        fs::remove_dir_all(full_path).map_err(|e| e.to_string())
+    }
+
+    /// Moves/renames a folder from one relative path to another
+    /// Example: from `projects\project1` to `archived\project1`
+    pub fn rename_folder(&self, from: &str, to: &str) -> Result<(), String> {
+        let from_path = self.save_dir.join(Path::new(from));
+        let to_path = self.save_dir.join(Path::new(to));
+        fs::rename(from_path, to_path).map_err(|e| e.to_string())
+    }
+
     /// Get the save path for the app from the AppData directory
     fn get_save_path_internal() -> PathBuf {
         let save_path = data_dir().expect("Could not find AppData directory");

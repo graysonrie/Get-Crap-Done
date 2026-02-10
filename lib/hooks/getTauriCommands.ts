@@ -39,6 +39,16 @@ interface TauriCommands {
   ) => Promise<string[]>;
   /** Open a path in the system file manager */
   openPathInFileManager: (path: string) => Promise<void>;
+  /** Permanently delete a project and all its contents */
+  deleteProject: (projectName: string) => Promise<void>;
+  /** Archive a project (move to archived folder) */
+  archiveProject: (projectName: string) => Promise<void>;
+  /** Restore an archived project back to the active list */
+  unarchiveProject: (projectName: string) => Promise<void>;
+  /** Get names of all archived projects */
+  getArchivedProjectNames: () => Promise<string[]>;
+  /** Permanently delete an archived project */
+  deleteArchivedProject: (projectName: string) => Promise<void>;
 }
 
 export default function getTauriCommands(): TauriCommands {
@@ -112,6 +122,21 @@ export default function getTauriCommands(): TauriCommands {
     },
     openPathInFileManager: async (path: string) => {
       await invoke("open_path_in_file_manager", { path });
+    },
+    deleteProject: async (projectName: string) => {
+      await invoke("delete_project", { projectName });
+    },
+    archiveProject: async (projectName: string) => {
+      await invoke("archive_project", { projectName });
+    },
+    unarchiveProject: async (projectName: string) => {
+      await invoke("unarchive_project", { projectName });
+    },
+    getArchivedProjectNames: async () => {
+      return await invoke<string[]>("get_archived_project_names");
+    },
+    deleteArchivedProject: async (projectName: string) => {
+      await invoke("delete_archived_project", { projectName });
     },
   };
 }
