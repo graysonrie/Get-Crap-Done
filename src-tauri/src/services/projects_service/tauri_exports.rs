@@ -103,10 +103,11 @@ pub async fn import_images_to_project(
     service: State<'_, Arc<ProjectsService>>,
     project_name: &str,
     image_paths: Vec<String>,
+    folder: Option<String>,
 ) -> Result<(), String> {
     service
         .image_loader
-        .import_images_to_project(project_name, image_paths)
+        .import_images_to_project(project_name, image_paths, folder)
         .await
 }
 
@@ -158,6 +159,69 @@ pub async fn export_evaluated_images(
         .image_exporter
         .export_evaluated_images(evaluations, output_dir_path)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn create_folder_in_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+    folder_name: &str,
+) -> Result<(), String> {
+    service.create_folder_in_project(project_name, folder_name)
+}
+
+#[tauri::command]
+pub fn get_folders_in_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+) -> Result<Vec<String>, String> {
+    service.get_folders_in_project(project_name)
+}
+
+#[tauri::command]
+pub fn rename_folder_in_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+    old_folder_name: &str,
+    new_folder_name: &str,
+) -> Result<(), String> {
+    service.rename_folder_in_project(project_name, old_folder_name, new_folder_name)
+}
+
+#[tauri::command]
+pub fn delete_folder_from_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+    folder_name: &str,
+) -> Result<(), String> {
+    service.delete_folder_from_project(project_name, folder_name)
+}
+
+#[tauri::command]
+pub async fn move_images_in_project(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+    image_names: Vec<String>,
+    target_folder: Option<String>,
+) -> Result<Vec<String>, String> {
+    let new_names = service
+        .image_loader
+        .move_images_in_project(project_name, image_names.clone(), target_folder)
+        .await?;
+
+    // Update evaluation records to match the new image names
+    let renames: Vec<(String, String)> = image_names
+        .into_iter()
+        .zip(new_names.iter().cloned())
+        .filter(|(old, new)| old != new)
+        .collect();
+    if !renames.is_empty() {
+        service
+            .image_evals
+            .rename_evaluations(project_name, &renames)?;
+    }
+
+    Ok(new_names)
 }
 
 /// Open a path (file or directory) in the system's default file manager

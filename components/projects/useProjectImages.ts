@@ -5,25 +5,16 @@ import getTauriCommands from "@/lib/hooks/getTauriCommands";
 import { useProjectStore } from "@/lib/stores/projectStore";
 
 export default function useProjectImages() {
+  const store = useProjectStore();
   const {
-    activeProjectName,
-    imagePreviews,
-    selectedImage,
-    imageEvaluations,
-    isLoadingPreviews,
-    isLoadingFullImage,
-    isEvaluating,
-    setImagePreviews,
-    setSelectedImage,
-    setImageEvaluations,
-    setIsLoadingPreviews,
-    setIsLoadingFullImage,
-    setIsEvaluating,
-  } = useProjectStore();
+    activeProjectName, imagePreviews, selectedImage, imageEvaluations,
+    focusedFolder, isLoadingPreviews, isLoadingFullImage, isEvaluating,
+    setImagePreviews, setSelectedImage, setImageEvaluations,
+    setIsLoadingPreviews, setIsLoadingFullImage,
+  } = store;
 
   const loadPreviews = useCallback(async () => {
     if (!activeProjectName) return;
-
     setIsLoadingPreviews(true);
     try {
       const { getImagePreviewsInProject } = getTauriCommands();
@@ -41,15 +32,12 @@ export default function useProjectImages() {
 
   const loadEvaluations = useCallback(async () => {
     if (!activeProjectName) return;
-
     try {
       const { getImageEvaluations } = getTauriCommands();
       const evaluations = await getImageEvaluations(activeProjectName);
-      console.log("Got evaluations:", evaluations);
       setImageEvaluations(evaluations);
     } catch (error) {
       console.error("Failed to load image evaluations:", error);
-      // Don't show toast for this - evaluations file may not exist yet
     }
   }, [activeProjectName, setImageEvaluations]);
 
@@ -61,7 +49,6 @@ export default function useProjectImages() {
   const selectImage = useCallback(
     async (imageName: string) => {
       if (!activeProjectName) return;
-
       setIsLoadingFullImage(true);
       try {
         const { loadImageFromProject } = getTauriCommands();
@@ -84,22 +71,14 @@ export default function useProjectImages() {
 
   const addImages = useCallback(async () => {
     if (!activeProjectName) return;
-
     const selected = await open({
       multiple: true,
-      filters: [
-        {
-          name: "Images",
-          extensions: ["png", "jpg", "jpeg"],
-        },
-      ],
+      filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }],
     });
-
     if (!selected || selected.length === 0) return;
-
     try {
       const { importImagesToProject } = getTauriCommands();
-      await importImagesToProject(activeProjectName, selected);
+      await importImagesToProject(activeProjectName, selected, focusedFolder);
       await loadPreviews();
     } catch (error) {
       console.error("Failed to import images:", error);
@@ -107,22 +86,15 @@ export default function useProjectImages() {
         description: String(error),
       });
     }
-  }, [activeProjectName, loadPreviews]);
+  }, [activeProjectName, focusedFolder, loadPreviews]);
 
   const deleteImage = useCallback(
     async (imageName: string) => {
       if (!activeProjectName) return;
-
       try {
         const { deleteImagesFromProject } = getTauriCommands();
         await deleteImagesFromProject(activeProjectName, [imageName]);
-
-        // Clear selected image if it was the deleted one
-        if (selectedImage?.imageName === imageName) {
-          setSelectedImage(null);
-        }
-
-        // Remove from local previews list
+        if (selectedImage?.imageName === imageName) setSelectedImage(null);
         setImagePreviews(
           imagePreviews.filter((p) => p.imageName !== imageName)
         );
@@ -133,78 +105,25 @@ export default function useProjectImages() {
         });
       }
     },
-    [
-      activeProjectName,
-      selectedImage,
-      imagePreviews,
-      setSelectedImage,
-      setImagePreviews,
-    ]
+    [activeProjectName, selectedImage, imagePreviews, setSelectedImage, setImagePreviews]
   );
 
-  const evaluateImagesByNames = useCallback(
-    async (openAIApiKey: string, imageNames: string[]) => {
-      if (!activeProjectName || imageNames.length === 0) return;
-
-      setIsEvaluating(true);
+  const moveImagesToFolder = useCallback(
+    async (imageNames: string[], targetFolder: string | null) => {
+      if (!activeProjectName) return;
       try {
-        const { evaluateImages } = getTauriCommands();
-        const evaluations = await evaluateImages(activeProjectName, {
-          openaiApiKey: openAIApiKey,
-          imageNames,
-        });
-        setImageEvaluations(evaluations);
-        const count = imageNames.length;
-        toast.success(
-          count === 1 ? "Image evaluated successfully" : `${count} images evaluated successfully`
-        );
+        const { moveImagesInProject } = getTauriCommands();
+        await moveImagesInProject(activeProjectName, imageNames, targetFolder);
+        await loadPreviews();
+        await loadEvaluations();
       } catch (error) {
-        console.error("Failed to evaluate images:", error);
-        toast.error("Failed to evaluate images", {
+        console.error("Failed to move images:", error);
+        toast.error("Failed to move images", {
           description: String(error),
         });
-      } finally {
-        setIsEvaluating(false);
       }
     },
-    [activeProjectName, setImageEvaluations, setIsEvaluating]
-  );
-
-  const evaluateSelectedImage = useCallback(
-    async (openAIApiKey: string) => {
-      if (!selectedImage) return;
-      await evaluateImagesByNames(openAIApiKey, [selectedImage.imageName]);
-    },
-    [selectedImage, evaluateImagesByNames]
-  );
-
-  const evaluateNewImages = useCallback(
-    async (openAIApiKey: string) => {
-      if (!activeProjectName) return;
-      const evaluatedNames = imageEvaluations.map((e) => e.imageName);
-      const toEval = imagePreviews
-        .filter((p) => !evaluatedNames.includes(p.imageName))
-        .map((p) => p.imageName);
-      if (toEval.length === 0) {
-        toast.info("No unevaluated images");
-        return;
-      }
-      await evaluateImagesByNames(openAIApiKey, toEval);
-    },
-    [activeProjectName, imagePreviews, imageEvaluations, evaluateImagesByNames]
-  );
-
-  const reevaluateAll = useCallback(
-    async (openAIApiKey: string) => {
-      if (!activeProjectName) return;
-      const toEval = imagePreviews.map((p) => p.imageName);
-      if (toEval.length === 0) {
-        toast.info("No images in project");
-        return;
-      }
-      await evaluateImagesByNames(openAIApiKey, toEval);
-    },
-    [activeProjectName, imagePreviews, evaluateImagesByNames]
+    [activeProjectName, loadPreviews, loadEvaluations]
   );
 
   return {
@@ -212,15 +131,15 @@ export default function useProjectImages() {
     imagePreviews,
     selectedImage,
     imageEvaluations,
+    focusedFolder,
     isLoadingPreviews,
     isLoadingFullImage,
     isEvaluating,
     selectImage,
     addImages,
     deleteImage,
-    evaluateSelectedImage,
-    evaluateNewImages,
-    reevaluateAll,
+    moveImagesToFolder,
     refreshPreviews: loadPreviews,
+    refreshEvaluations: loadEvaluations,
   };
 }

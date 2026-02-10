@@ -1,4 +1,4 @@
-use std::{path::Path, sync::Arc};
+use std::{fs, path::Path, path::PathBuf, sync::Arc};
 
 use ocr_image_thing::ImageEvalClient;
 
@@ -18,6 +18,45 @@ impl ImageEvaluationsComponent {
         Self { app_save, client }
     }
 
+    /// Collects all image files from `images/` root and one level of subdirectories.
+    /// Returns `(full_path, relative_name)` pairs.
+    fn collect_all_images(images_base: &Path) -> Vec<(PathBuf, String)> {
+        let mut result = Vec::new();
+        let entries = match fs::read_dir(images_base) {
+            Ok(e) => e,
+            Err(_) => return result,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                let name = path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                result.push((path, name));
+            } else if path.is_dir() {
+                let folder_name = match path.file_name() {
+                    Some(n) => n.to_string_lossy().to_string(),
+                    None => continue,
+                };
+                if let Ok(sub_entries) = fs::read_dir(&path) {
+                    for sub_entry in sub_entries.flatten() {
+                        let sub_path = sub_entry.path();
+                        if sub_path.is_file() {
+                            let file_name = sub_path
+                                .file_name()
+                                .map(|n| n.to_string_lossy().to_string())
+                                .unwrap_or_default();
+                            let rel_name = format!("{folder_name}/{file_name}");
+                            result.push((sub_path, rel_name));
+                        }
+                    }
+                }
+            }
+        }
+        result
+    }
+
     pub async fn evaluate_images(
         &self,
         project_name: &str,
@@ -25,19 +64,19 @@ impl ImageEvaluationsComponent {
     ) -> Result<Vec<ImageEvaluation>, String> {
         self.client.set_api_key(&request.openai_api_key).await;
 
-        // Get the full path to the project images (get_items_in_folder returns full paths)
-        let all_proj_images = self
+        // Collect all images from root and subdirectories
+        let images_base = self
             .app_save
-            .get_items_in_folder(&format!("projects/{project_name}/images"))?;
-        let selected_images: Vec<String> = all_proj_images
-            .iter()
-            .filter(|path| path.is_file())
-            .filter(|path| {
-                path.file_name()
-                    .map(|n| request.image_names.contains(&n.to_string_lossy().to_string()))
-                    .unwrap_or(false)
-            })
-            .map(|path| path.to_string_lossy().to_string())
+            .get_full_path(&format!("projects/{project_name}/images"));
+        let all_images = Self::collect_all_images(&images_base);
+
+        // Build a map from relative name -> full path, then filter by requested names
+        let requested: std::collections::HashSet<&str> =
+            request.image_names.iter().map(String::as_str).collect();
+        let selected_images: Vec<(String, String)> = all_images
+            .into_iter()
+            .filter(|(_, rel_name)| requested.contains(rel_name.as_str()))
+            .map(|(full_path, rel_name)| (full_path.to_string_lossy().to_string(), rel_name))
             .collect();
 
         if selected_images.is_empty() {
@@ -47,19 +86,34 @@ impl ImageEvaluationsComponent {
             ));
         }
 
-        let eval_results = self.client.evaluate_images(selected_images).await;
+        // Build a reverse map: full_path -> relative_name (for result mapping)
+        let path_to_rel: std::collections::HashMap<String, String> = selected_images
+            .iter()
+            .map(|(full_path, rel_name)| (full_path.clone(), rel_name.clone()))
+            .collect();
+
+        let full_paths: Vec<String> = selected_images.into_iter().map(|(fp, _)| fp).collect();
+        let eval_results = self.client.evaluate_images(full_paths).await;
 
         let current_evals = self.read_images_eval_json(project_name)?;
         let mut new_evals = Vec::new();
 
         for result in eval_results {
-            let image_file_name = Path::new(&result.full_image_path)
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string();
+            // Resolve the relative name from the full path
+            let rel_name = path_to_rel
+                .get(&result.full_image_path)
+                .cloned()
+                .unwrap_or_else(|| {
+                    // Fallback: extract filename only
+                    Path::new(&result.full_image_path)
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string()
+                });
+
             let new_eval = ImageEvaluation {
-                image_name: image_file_name,
+                image_name: rel_name,
                 result: result.success_result,
                 fail_reason: result.failure_result,
             };
@@ -105,6 +159,24 @@ impl ImageEvaluationsComponent {
     ) -> Result<(), String> {
         let evals_path = format!("projects/{project_name}/image_evals.json");
         self.app_save.save_json(&evals_path, evals)
+    }
+
+    /// Renames evaluation entries when images are moved between folders.
+    pub fn rename_evaluations(
+        &self,
+        project_name: &str,
+        renames: &[(String, String)],
+    ) -> Result<(), String> {
+        let mut evals = self.read_images_eval_json(project_name)?;
+        for eval in &mut evals {
+            for (old, new) in renames {
+                if eval.image_name == *old {
+                    eval.image_name = new.clone();
+                    break;
+                }
+            }
+        }
+        self.write_images_eval_json(project_name, &evals)
     }
 
     /// Removes saved evaluations for the given image names (e.g. when those images are deleted).

@@ -1,25 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Home, ImagePlus, Sparkles, Loader2, ChevronDown, Download } from "lucide-react";
+import { Home, ImagePlus, Download, FolderInput } from "lucide-react";
+import EvaluateDropdown from "./EvaluateDropdown";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -28,6 +12,10 @@ interface ProjectHeaderProps {
   onEvaluateThisImage: () => void;
   onEvaluateNewImages: () => void;
   onReevaluateAll: () => void;
+  onEvaluateNewInFolder: () => void;
+  onReevaluateAllInFolder: () => void;
+  onMoveToFolder: () => void;
+  canMoveToFolder: boolean;
   onExport: () => void;
   isEvaluating: boolean;
   canEvaluateThisImage: boolean;
@@ -35,6 +23,9 @@ interface ProjectHeaderProps {
   hasImages: boolean;
   hasApiKey: boolean;
   hasEvaluatedImages: boolean;
+  focusedFolder: string | null;
+  hasFolderUnevaluatedImages: boolean;
+  hasFolderImages: boolean;
 }
 
 export function ProjectHeader({
@@ -44,6 +35,10 @@ export function ProjectHeader({
   onEvaluateThisImage,
   onEvaluateNewImages,
   onReevaluateAll,
+  onEvaluateNewInFolder,
+  onReevaluateAllInFolder,
+  onMoveToFolder,
+  canMoveToFolder,
   onExport,
   isEvaluating,
   canEvaluateThisImage,
@@ -51,109 +46,62 @@ export function ProjectHeader({
   hasImages,
   hasApiKey,
   hasEvaluatedImages,
+  focusedFolder,
+  hasFolderUnevaluatedImages,
+  hasFolderImages,
 }: ProjectHeaderProps) {
-  const [reevaluateDialogOpen, setReevaluateDialogOpen] = useState(false);
-
-  const evaluateDropdownEnabled = hasApiKey && hasImages && !isEvaluating;
-
-  const handleReevaluateAllClick = () => {
-    setReevaluateDialogOpen(true);
-  };
-
-  const handleReevaluateAllConfirm = () => {
-    onReevaluateAll();
-    setReevaluateDialogOpen(false);
-  };
-
   return (
-    <>
-      <div className="flex items-center justify-between px-4 py-2 border-b">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onGoHome} title="Home">
-            <Home className="w-4 h-4 shrink-0 sm:mr-2" />
-            <span className="hidden sm:inline">Home</span>
-          </Button>
-          <Separator orientation="vertical" className="h-6" />
-          <h1 className="text-md font-semibold pb-0.5">{projectName}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          {hasEvaluatedImages && (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={onExport}
-              title="Export"
-            >
-              <Download className="w-4 h-4 shrink-0 sm:mr-2" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={!evaluateDropdownEnabled}
-                title="Evaluate"
-              >
-                {isEvaluating ? (
-                  <Loader2 className="w-4 h-4 shrink-0 sm:mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4 shrink-0 sm:mr-2" />
-                )}
-                <span className="hidden sm:inline">Evaluate</span>
-                <ChevronDown className="hidden w-4 h-4 sm:block ml-1 opacity-60" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={onEvaluateThisImage}
-                disabled={!canEvaluateThisImage}
-              >
-                Evaluate This Image
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={onEvaluateNewImages}
-                disabled={!hasUnevaluatedImages}
-              >
-                Evaluate New Images
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleReevaluateAllClick}
-                disabled={!hasImages}
-              >
-                Reevaluate All
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button size="sm" onClick={onAddImages} title="Add Images">
-            <ImagePlus className="w-4 h-4 shrink-0 sm:mr-2" />
-            <span className="hidden sm:inline">Add Images</span>
-          </Button>
-        </div>
+    <div className="flex items-center justify-between px-4 py-2 border-b">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={onGoHome} title="Home">
+          <Home className="w-4 h-4 shrink-0 sm:mr-2" />
+          <span className="hidden sm:inline">Home</span>
+        </Button>
+        <Separator orientation="vertical" className="h-6" />
+        <h1 className="text-md font-semibold pb-0.5">{projectName}</h1>
       </div>
-
-      <AlertDialog
-        open={reevaluateDialogOpen}
-        onOpenChange={setReevaluateDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reevaluate all images?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will send a new evaluation request for every image in the
-              project, including ones that already have evaluations. Existing
-              evaluations will be overwritten. This may use more API credits.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleReevaluateAllConfirm}>
-              Reevaluate All
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      <div className="flex items-center gap-2">
+        {hasEvaluatedImages && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={onExport}
+            title="Export"
+          >
+            <Download className="w-4 h-4 shrink-0 sm:mr-2" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={onMoveToFolder}
+          disabled={!canMoveToFolder}
+          title="Move to Folder"
+        >
+          <FolderInput className="w-4 h-4 shrink-0 sm:mr-2" />
+          <span className="hidden sm:inline">Move</span>
+        </Button>
+        <EvaluateDropdown
+          onEvaluateThisImage={onEvaluateThisImage}
+          onEvaluateNewImages={onEvaluateNewImages}
+          onReevaluateAll={onReevaluateAll}
+          onEvaluateNewInFolder={onEvaluateNewInFolder}
+          onReevaluateAllInFolder={onReevaluateAllInFolder}
+          isEvaluating={isEvaluating}
+          canEvaluateThisImage={canEvaluateThisImage}
+          hasUnevaluatedImages={hasUnevaluatedImages}
+          hasImages={hasImages}
+          hasApiKey={hasApiKey}
+          focusedFolder={focusedFolder}
+          hasFolderUnevaluatedImages={hasFolderUnevaluatedImages}
+          hasFolderImages={hasFolderImages}
+        />
+        <Button size="sm" onClick={onAddImages} title="Add Images">
+          <ImagePlus className="w-4 h-4 shrink-0 sm:mr-2" />
+          <span className="hidden sm:inline">Add Images</span>
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -145,4 +145,91 @@ impl ProjectsService {
         let relative_path = format!("archived/{project_name}");
         self.app_save.delete_folder(&relative_path)
     }
+
+    /// Creates a folder inside a project's images directory
+    pub fn create_folder_in_project(
+        &self,
+        project_name: &str,
+        folder_name: &str,
+    ) -> Result<(), String> {
+        let path = format!("projects/{project_name}/images/{folder_name}");
+        self.app_save.ensure_folder_created(&path);
+        Ok(())
+    }
+
+    /// Lists folder names inside a project's images directory
+    pub fn get_folders_in_project(&self, project_name: &str) -> Result<Vec<String>, String> {
+        let images_path = format!("projects/{project_name}/images");
+        let items = self.app_save.get_items_in_folder(&images_path)?;
+        let folders: Vec<String> = items
+            .into_iter()
+            .filter(|p| p.is_dir())
+            .filter_map(|p| p.file_name().map(|n| n.to_string_lossy().to_string()))
+            .collect();
+        Ok(folders)
+    }
+
+    /// Renames a folder inside a project's images directory and updates evaluations
+    pub fn rename_folder_in_project(
+        &self,
+        project_name: &str,
+        old_folder_name: &str,
+        new_folder_name: &str,
+    ) -> Result<(), String> {
+        let from = format!("projects/{project_name}/images/{old_folder_name}");
+        let to = format!("projects/{project_name}/images/{new_folder_name}");
+        self.app_save.rename_folder(&from, &to)?;
+
+        // Collect image file names in the (now renamed) folder to build rename pairs
+        let folder_path = format!("projects/{project_name}/images/{new_folder_name}");
+        let items = self.app_save.get_items_in_folder(&folder_path)?;
+        let renames: Vec<(String, String)> = items
+            .into_iter()
+            .filter(|p| p.is_file())
+            .filter_map(|p| {
+                p.file_name().map(|n| {
+                    let fname = n.to_string_lossy().to_string();
+                    (
+                        format!("{old_folder_name}/{fname}"),
+                        format!("{new_folder_name}/{fname}"),
+                    )
+                })
+            })
+            .collect();
+
+        if !renames.is_empty() {
+            self.image_evals
+                .rename_evaluations(project_name, &renames)?;
+        }
+
+        Ok(())
+    }
+
+    /// Deletes a folder and all its images from a project, plus their evaluations
+    pub fn delete_folder_from_project(
+        &self,
+        project_name: &str,
+        folder_name: &str,
+    ) -> Result<(), String> {
+        // Collect image names in the folder so we can remove their evaluations
+        let folder_path = format!("projects/{project_name}/images/{folder_name}");
+        let items = self.app_save.get_items_in_folder(&folder_path)?;
+        let image_names: Vec<String> = items
+            .into_iter()
+            .filter(|p| p.is_file())
+            .filter_map(|p| {
+                p.file_name()
+                    .map(|n| format!("{folder_name}/{}", n.to_string_lossy()))
+            })
+            .collect();
+
+        // Remove evaluations for those images
+        if !image_names.is_empty() {
+            self.image_evals
+                .remove_evaluations_for_images(project_name, &image_names)?;
+        }
+
+        // Delete the folder and its contents
+        self.app_save.delete_folder(&folder_path)
+    }
 }

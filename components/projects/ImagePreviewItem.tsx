@@ -1,22 +1,29 @@
 "use client";
 
-import { Trash2, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
+import { Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImagePreviewModel } from "@/lib/hooks/models";
+
+/** Extract just the filename from a possibly folder-prefixed image name */
+function displayName(imageName: string): string {
+  const parts = imageName.split("/");
+  return parts[parts.length - 1];
+}
 
 interface ImagePreviewItemProps {
   preview: ImagePreviewModel;
   isSelected: boolean;
+  isMultiSelected: boolean;
   isEvaluated: boolean;
-  /** When true (and isEvaluated), show green check; when false but isEvaluated, show yellow warning */
   hasSuggestedSuffix: boolean;
-  onSelect: () => void;
+  onSelect: (e: React.MouseEvent) => void;
   onDelete: () => void;
 }
 
 export function ImagePreviewItem({
   preview,
   isSelected,
+  isMultiSelected,
   isEvaluated,
   hasSuggestedSuffix,
   onSelect,
@@ -26,7 +33,8 @@ export function ImagePreviewItem({
     <div
       className={cn(
         "group flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors",
-        isSelected && "bg-accent"
+        isSelected && "bg-primary/15",
+        isMultiSelected && "bg-primary/15 ring-2 ring-primary"
       )}
     >
       <button
@@ -37,7 +45,7 @@ export function ImagePreviewItem({
           <img
             src={`data:image/jpeg;base64,${preview.base64Preview}`}
             alt={preview.imageName}
-            className="w-12 h-12 object-cover rounded"
+            className="w-12 h-12 object-cover rounded pointer-events-none"
           />
           {isEvaluated && (
             <div className="absolute -top-1 -right-1 bg-background rounded-full">
@@ -50,7 +58,9 @@ export function ImagePreviewItem({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{preview.imageName}</p>
+          <p className="text-sm font-medium truncate">
+            {displayName(preview.imageName)}
+          </p>
           <p className="text-xs text-muted-foreground">
             {preview.width} x {preview.height}
           </p>

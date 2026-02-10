@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, io::BufReader, io::Cursor, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, fs, fs::File, io::BufReader, io::Cursor, path::PathBuf, sync::Arc};
 
 use base64::{engine::general_purpose::STANDARD, Engine};
 use fast_image_resize::{images::Image, ResizeAlg, ResizeOptions, Resizer};
@@ -63,14 +63,22 @@ impl ImageLoaderComponent {
         &self,
         project_name: &str,
         image_paths: Vec<String>,
+        folder: Option<String>,
     ) -> Result<(), String> {
+        let folder_prefix = folder
+            .as_deref()
+            .filter(|f| !f.is_empty())
+            .map(|f| format!("{f}/"))
+            .unwrap_or_default();
+
         for image_path in image_paths {
             let source_path = std::path::Path::new(&image_path);
             let file_name = source_path
                 .file_name()
                 .ok_or_else(|| format!("Invalid file path: {image_path}"))?
                 .to_string_lossy();
-            let new_image_path = format!("projects/{project_name}/images/{file_name}");
+            let new_image_path =
+                format!("projects/{project_name}/images/{folder_prefix}{file_name}");
             self.app_save.copy_file(&image_path, &new_image_path)?;
         }
 
@@ -95,6 +103,40 @@ impl ImageLoaderComponent {
         }
     }
 
+    /// Collects all image files from a directory and one level of subdirectories.
+    /// Returns `(full_path, relative_name)` where relative_name is e.g. `"file.jpg"` or `"folder/file.jpg"`.
+    fn collect_image_files(base_items: Vec<PathBuf>) -> Vec<(PathBuf, String)> {
+        let mut result = Vec::new();
+        for item in base_items {
+            if item.is_file() {
+                let name = item
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                result.push((item, name));
+            } else if item.is_dir() {
+                let folder_name = match item.file_name() {
+                    Some(n) => n.to_string_lossy().to_string(),
+                    None => continue,
+                };
+                if let Ok(entries) = fs::read_dir(&item) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_file() {
+                            let file_name = path
+                                .file_name()
+                                .map(|n| n.to_string_lossy().to_string())
+                                .unwrap_or_default();
+                            let rel_name = format!("{folder_name}/{file_name}");
+                            result.push((path, rel_name));
+                        }
+                    }
+                }
+            }
+        }
+        result
+    }
+
     /// Returns image previews (thumbnails) for all images in a project
     /// Uses caching and parallel processing for better performance
     pub async fn get_image_previews_in_project(
@@ -104,20 +146,15 @@ impl ImageLoaderComponent {
         let images_path = format!("projects/{project_name}/images");
         let image_paths = self.app_save.get_items_in_folder(&images_path)?;
 
-        // Filter to only files
-        let file_paths: Vec<PathBuf> = image_paths.into_iter().filter(|p| p.is_file()).collect();
+        // Collect files from root and one level of subdirectories
+        let file_entries = Self::collect_image_files(image_paths);
 
         // Check cache for existing previews
         let cache = self.preview_cache.read().await;
         let mut cached_previews = Vec::new();
         let mut uncached_paths = Vec::new();
 
-        for path in file_paths {
-            let image_name = path
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_default();
-
+        for (path, image_name) in file_entries {
             let key = Self::cache_key(project_name, &image_name);
             if let Some(preview) = cache.get(&key) {
                 cached_previews.push(preview.clone());
@@ -247,6 +284,55 @@ impl ImageLoaderComponent {
         }
 
         Ok(model)
+    }
+
+    /// Moves images to a different folder (or root) within the project.
+    /// `image_names` are current relative paths (e.g. "photo.jpg" or "folder1/photo.jpg").
+    /// `target_folder` is the destination folder name, or `None` for root.
+    /// Returns the new relative image names.
+    pub async fn move_images_in_project(
+        &self,
+        project_name: &str,
+        image_names: Vec<String>,
+        target_folder: Option<String>,
+    ) -> Result<Vec<String>, String> {
+        let images_base = format!("projects/{project_name}/images");
+        let target_prefix = target_folder
+            .as_deref()
+            .filter(|f| !f.is_empty())
+            .map(|f| format!("{f}/"))
+            .unwrap_or_default();
+
+        let mut new_names = Vec::new();
+        for image_name in &image_names {
+            // Extract just the filename (strip any existing folder prefix)
+            let file_name = std::path::Path::new(image_name)
+                .file_name()
+                .ok_or_else(|| format!("Invalid image name: {image_name}"))?
+                .to_string_lossy()
+                .to_string();
+
+            let src_path = self.app_save.get_full_path(&format!("{images_base}/{image_name}"));
+            let new_rel_name = format!("{target_prefix}{file_name}");
+            let dst_path = self.app_save.get_full_path(&format!("{images_base}/{new_rel_name}"));
+
+            // Skip if source and destination are the same
+            if src_path == dst_path {
+                new_names.push(new_rel_name);
+                continue;
+            }
+
+            fs::rename(&src_path, &dst_path).map_err(|e| {
+                format!("Failed to move {image_name} to {new_rel_name}: {e}")
+            })?;
+
+            new_names.push(new_rel_name);
+        }
+
+        // Clear caches since image names changed
+        self.clear_project_cache(project_name).await;
+
+        Ok(new_names)
     }
 
     /// Get ImageFormat from file extension for faster decoding
