@@ -86,7 +86,7 @@ export function ExportEvaluationsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="overflow-hidden">
         <DialogHeader>
           <DialogTitle>Export evaluated images</DialogTitle>
           <DialogDescription>
@@ -94,23 +94,24 @@ export function ExportEvaluationsModal({
             file(s) with their suggested filename suffixes.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
+        <div className="py-4 space-y-2 overflow-hidden">
           <Label>Output directory</Label>
-          <div className="flex gap-2 items-center">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleSelectDirectory}
-              disabled={isExporting}
-            >
-              <FolderOpen className="w-4 h-4 mr-2" />
-              Select directory
-            </Button>
-            <span className="text-sm text-muted-foreground truncate flex-1 min-w-0">
-              {selectedPath ?? "No directory selected"}
-            </span>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSelectDirectory}
+            disabled={isExporting}
+          >
+            <FolderOpen className="w-4 h-4 mr-2" />
+            Select directory
+          </Button>
+          <p
+            className="text-sm text-muted-foreground truncate"
+            title={selectedPath ?? undefined}
+          >
+            {selectedPath ?? "No directory selected"}
+          </p>
         </div>
         <DialogFooter>
           <Button
