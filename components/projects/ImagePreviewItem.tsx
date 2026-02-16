@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Trash2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImagePreviewModel } from "@/lib/hooks/models";
 
@@ -16,6 +16,7 @@ interface ImagePreviewItemProps {
   isMultiSelected: boolean;
   isEvaluated: boolean;
   hasSuggestedSuffix: boolean;
+  isBeingEvaluated: boolean;
   onSelect: (e: React.MouseEvent) => void;
   onDelete: () => void;
 }
@@ -26,6 +27,7 @@ export function ImagePreviewItem({
   isMultiSelected,
   isEvaluated,
   hasSuggestedSuffix,
+  isBeingEvaluated,
   onSelect,
   onDelete,
 }: ImagePreviewItemProps) {
@@ -47,7 +49,11 @@ export function ImagePreviewItem({
             alt={preview.imageName}
             className="w-12 h-12 object-cover rounded pointer-events-none"
           />
-          {isEvaluated && (
+          {isBeingEvaluated ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+              <Loader2 className="w-5 h-5 animate-spin text-white" />
+            </div>
+          ) : isEvaluated ? (
             <div className="absolute -top-1 -right-1 bg-background rounded-full">
               {hasSuggestedSuffix ? (
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -55,12 +61,18 @@ export function ImagePreviewItem({
                 <AlertCircle className="w-4 h-4 text-yellow-500" />
               )}
             </div>
-          )}
+          ) : null}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">
-            {displayName(preview.imageName)}
-          </p>
+          {isBeingEvaluated ? (
+            <p className="text-sm font-medium truncate text-muted-foreground animate-pulse">
+              Evaluating...
+            </p>
+          ) : (
+            <p className="text-sm font-medium truncate">
+              {displayName(preview.imageName)}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {preview.width} x {preview.height}
           </p>

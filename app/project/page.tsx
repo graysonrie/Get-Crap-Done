@@ -20,6 +20,7 @@ export default function ProjectPage() {
   const reset = useProjectStore((s) => s.reset);
   const selectedImageNames = useProjectStore((s) => s.selectedImageNames);
   const setSelectedImageNames = useProjectStore((s) => s.setSelectedImageNames);
+  const evaluatingImageNames = useProjectStore((s) => s.evaluatingImageNames);
   const { openAIApiKey } = useOpenAIApiKey();
 
   const {
@@ -110,7 +111,7 @@ export default function ProjectPage() {
       <div className="flex flex-1 overflow-hidden">
         <ImageSidebar
           imagePreviews={imagePreviews} selectedImage={selectedImage}
-          evaluatedImageNames={evaluatedImageNames} evaluatedWithSuffixImageNames={evaluatedWithSuffixImageNames}
+          evaluatedImageNames={evaluatedImageNames} evaluatedWithSuffixImageNames={evaluatedWithSuffixImageNames} evaluatingImageNames={evaluatingImageNames}
           isLoading={isLoadingPreviews} folders={folders} focusedFolder={focusedFolder}
           onSelectImage={selectImage} onDeleteImage={deleteImage}
           onFocusFolder={setFocusedFolder} onCreateFolder={createFolder}

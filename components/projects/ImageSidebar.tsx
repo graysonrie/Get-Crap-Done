@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Loader2, ImageIcon, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import SidebarImageList from "./SidebarImageList";
 import SidebarFolderItem from "./SidebarFolderItem";
 import CreateFolderDialog from "./CreateFolderDialog";
@@ -14,6 +15,7 @@ interface ImageSidebarProps {
   selectedImage: FullImageModel | null;
   evaluatedImageNames: string[];
   evaluatedWithSuffixImageNames: string[];
+  evaluatingImageNames: string[];
   isLoading: boolean;
   folders: string[];
   focusedFolder: string | null;
@@ -27,7 +29,7 @@ interface ImageSidebarProps {
 
 export function ImageSidebar({
   imagePreviews, selectedImage,
-  evaluatedImageNames, evaluatedWithSuffixImageNames,
+  evaluatedImageNames, evaluatedWithSuffixImageNames, evaluatingImageNames,
   isLoading, folders, focusedFolder,
   onSelectImage, onDeleteImage, onFocusFolder,
   onCreateFolder, onDeleteFolder, onRenameFolder,
@@ -91,9 +93,12 @@ export function ImageSidebar({
     onSelectImage(imageName);
   };
 
+  const pendingImageCount = useProjectStore((s) => s.pendingImageCount);
+
   const sharedListProps = {
     selectedImage, evaluatedImageNames, evaluatedWithSuffixImageNames,
-    selectedImageNames, onImageClick: handleImageClick, onDeleteImage,
+    evaluatingImageNames, selectedImageNames,
+    onImageClick: handleImageClick, onDeleteImage,
   };
 
   const totalCount = imagePreviews.length;
@@ -115,7 +120,7 @@ export function ImageSidebar({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
-          ) : totalCount === 0 && folders.length === 0 ? (
+          ) : totalCount === 0 && folders.length === 0 && pendingImageCount === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">No images yet.<br />Click &quot;Add Images&quot; to import.</p>
@@ -123,6 +128,16 @@ export function ImageSidebar({
           ) : (
             <div className="flex flex-col gap-1">
               <SidebarImageList images={rootImages} {...sharedListProps} />
+              {pendingImageCount > 0 &&
+                Array.from({ length: pendingImageCount }).map((_, i) => (
+                  <div key={`skeleton-${i}`} className="flex items-center gap-2 p-2">
+                    <Skeleton className="w-12 h-12 rounded shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <Skeleton className="h-3.5 w-3/4 rounded" />
+                      <Skeleton className="h-3 w-1/2 rounded" />
+                    </div>
+                  </div>
+                ))}
               {folders.map((folder) => {
                 const images = folderImages(folder);
                 return (

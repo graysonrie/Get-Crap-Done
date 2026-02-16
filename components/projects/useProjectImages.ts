@@ -69,6 +69,8 @@ export default function useProjectImages() {
     [activeProjectName, setSelectedImage, setIsLoadingFullImage]
   );
 
+  const setPendingImageCount = useProjectStore((s) => s.setPendingImageCount);
+
   const addImages = useCallback(async () => {
     if (!activeProjectName) return;
     const selected = await open({
@@ -76,6 +78,7 @@ export default function useProjectImages() {
       filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }],
     });
     if (!selected || selected.length === 0) return;
+    setPendingImageCount(selected.length);
     try {
       const { importImagesToProject } = getTauriCommands();
       await importImagesToProject(activeProjectName, selected, focusedFolder);
@@ -85,8 +88,10 @@ export default function useProjectImages() {
       toast.error("Failed to import images", {
         description: String(error),
       });
+    } finally {
+      setPendingImageCount(0);
     }
-  }, [activeProjectName, focusedFolder, loadPreviews]);
+  }, [activeProjectName, focusedFolder, loadPreviews, setPendingImageCount]);
 
   const deleteImage = useCallback(
     async (imageName: string) => {

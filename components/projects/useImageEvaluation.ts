@@ -10,12 +10,14 @@ export default function useImageEvaluation() {
   const imageEvaluations = useProjectStore((s) => s.imageEvaluations);
   const setImageEvaluations = useProjectStore((s) => s.setImageEvaluations);
   const setIsEvaluating = useProjectStore((s) => s.setIsEvaluating);
+  const setEvaluatingImageNames = useProjectStore((s) => s.setEvaluatingImageNames);
 
   const evaluateImagesByNames = useCallback(
     async (openAIApiKey: string, imageNames: string[]) => {
       if (!activeProjectName || imageNames.length === 0) return;
 
       setIsEvaluating(true);
+      setEvaluatingImageNames(imageNames);
       try {
         const { evaluateImages } = getTauriCommands();
         const evaluations = await evaluateImages(activeProjectName, {
@@ -36,9 +38,10 @@ export default function useImageEvaluation() {
         });
       } finally {
         setIsEvaluating(false);
+        setEvaluatingImageNames([]);
       }
     },
-    [activeProjectName, setImageEvaluations, setIsEvaluating]
+    [activeProjectName, setImageEvaluations, setIsEvaluating, setEvaluatingImageNames]
   );
 
   const evaluateSelectedImage = useCallback(

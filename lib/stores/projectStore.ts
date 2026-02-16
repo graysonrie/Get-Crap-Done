@@ -13,10 +13,14 @@ interface ProjectState {
   focusedFolder: string | null;
   selectedImageNames: string[];
   lastClickedImageName: string | null;
+  pendingImageCount: number;
+  evaluatingImageNames: string[];
   isLoadingPreviews: boolean;
   isLoadingFullImage: boolean;
   isEvaluating: boolean;
 
+  setPendingImageCount: (count: number) => void;
+  setEvaluatingImageNames: (names: string[]) => void;
   setActiveProject: (projectName: string | null) => void;
   setImagePreviews: (previews: ImagePreviewModel[]) => void;
   setSelectedImage: (image: FullImageModel | null) => void;
@@ -38,6 +42,8 @@ const initialState = {
   focusedFolder: null,
   selectedImageNames: [] as string[],
   lastClickedImageName: null,
+  pendingImageCount: 0,
+  evaluatingImageNames: [] as string[],
   isLoadingPreviews: false,
   isLoadingFullImage: false,
   isEvaluating: false,
@@ -53,6 +59,8 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setFocusedFolder: (folder) => set({ focusedFolder: folder }),
   setSelectedImageNames: (names) => set({ selectedImageNames: names }),
   setLastClickedImageName: (name) => set({ lastClickedImageName: name }),
+  setPendingImageCount: (count) => set({ pendingImageCount: count }),
+  setEvaluatingImageNames: (names) => set({ evaluatingImageNames: names }),
   setIsLoadingPreviews: (loading) => set({ isLoadingPreviews: loading }),
   setIsLoadingFullImage: (loading) => set({ isLoadingFullImage: loading }),
   setIsEvaluating: (evaluating) => set({ isEvaluating: evaluating }),

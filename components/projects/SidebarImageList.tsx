@@ -8,6 +8,7 @@ interface SidebarImageListProps {
   selectedImage: FullImageModel | null;
   evaluatedImageNames: string[];
   evaluatedWithSuffixImageNames: string[];
+  evaluatingImageNames: string[];
   selectedImageNames: string[];
   onImageClick: (imageName: string, e: React.MouseEvent) => void;
   onDeleteImage: (imageName: string) => void;
@@ -18,6 +19,7 @@ export default function SidebarImageList({
   selectedImage,
   evaluatedImageNames,
   evaluatedWithSuffixImageNames,
+  evaluatingImageNames,
   selectedImageNames,
   onImageClick,
   onDeleteImage,
@@ -34,6 +36,7 @@ export default function SidebarImageList({
           hasSuggestedSuffix={evaluatedWithSuffixImageNames.includes(
             preview.imageName
           )}
+          isBeingEvaluated={evaluatingImageNames.includes(preview.imageName)}
           onSelect={(e) => onImageClick(preview.imageName, e)}
           onDelete={() => onDeleteImage(preview.imageName)}
         />
