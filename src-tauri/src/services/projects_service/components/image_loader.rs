@@ -4,21 +4,25 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use fast_image_resize::{images::Image, ResizeAlg, ResizeOptions, Resizer};
 use futures::future::join_all;
 use image::{codecs::jpeg::JpegEncoder, DynamicImage, GenericImageView, ImageFormat, ImageReader};
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, Semaphore};
 use turbojpeg::Decompressor;
 
 use crate::services::{app_save_service::AppSaveService, projects_service::models::*};
 
 /// Max dimension for preview thumbnails
 const PREVIEW_MAX_SIZE: u32 = 200;
+/// Max number of images decoded concurrently to avoid OOM
+const MAX_CONCURRENT_PREVIEWS: usize = 4;
 /// Cache key format: "project_name/image_name"
 pub type ImageCacheKey = String;
-pub struct ImageLoaderComponent{
+pub struct ImageLoaderComponent {
     app_save: Arc<AppSaveService>,
     /// Cache for full resolution images
     full_image_cache: RwLock<HashMap<ImageCacheKey, FullImageModel>>,
     /// Cache for image previews
     preview_cache: RwLock<HashMap<ImageCacheKey, ImagePreviewModel>>,
+    /// Limits how many images are decoded in parallel
+    preview_semaphore: Arc<Semaphore>,
 }
 
 impl ImageLoaderComponent {
@@ -27,6 +31,7 @@ impl ImageLoaderComponent {
             app_save,
             full_image_cache: RwLock::new(HashMap::new()),
             preview_cache: RwLock::new(HashMap::new()),
+            preview_semaphore: Arc::new(Semaphore::new(MAX_CONCURRENT_PREVIEWS)),
         }
     }
 
@@ -164,13 +169,19 @@ impl ImageLoaderComponent {
         }
         drop(cache);
 
-        // Process uncached images in parallel
+        // Process uncached images in parallel, throttled by a semaphore
+        // to avoid OOM when importing many images at once
         let project_name_owned = project_name.to_string();
+        let semaphore = Arc::clone(&self.preview_semaphore);
         let tasks: Vec<_> = uncached_paths
             .into_iter()
             .map(|(path, image_name)| {
                 let project_name = project_name_owned.clone();
-                async move { Self::generate_preview_async(path, image_name, project_name).await }
+                let sem = Arc::clone(&semaphore);
+                async move {
+                    let _permit = sem.acquire().await.map_err(|e| e.to_string())?;
+                    Self::generate_preview_async(path, image_name, project_name).await
+                }
             })
             .collect();
 
