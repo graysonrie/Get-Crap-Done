@@ -133,10 +133,11 @@ pub async fn evaluate_images(
     project_name: &str,
     request: RequestImageEvaluation,
     custom_prompt: Option<String>,
+    temperature: Option<f32>,
 ) -> Result<Vec<ImageEvaluation>, String> {
     service
         .image_evals
-        .evaluate_images(project_name, request, custom_prompt)
+        .evaluate_images(project_name, request, custom_prompt, temperature)
         .await
 }
 

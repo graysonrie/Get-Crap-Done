@@ -6,6 +6,7 @@ import { useProjectStore } from "@/lib/stores/projectStore";
 export default function useImageEvaluation() {
   const activeProjectName = useProjectStore((s) => s.activeProjectName);
   const customPrompt = useProjectStore((s) => s.customPrompt);
+  const customTemperature = useProjectStore((s) => s.customTemperature);
   const imagePreviews = useProjectStore((s) => s.imagePreviews);
   const selectedImage = useProjectStore((s) => s.selectedImage);
   const imageEvaluations = useProjectStore((s) => s.imageEvaluations);
@@ -29,7 +30,8 @@ export default function useImageEvaluation() {
             openaiApiKey: openAIApiKey,
             imageNames,
           },
-          customPrompt
+          customPrompt,
+          customTemperature
         );
         setImageEvaluations(evaluations);
         const count = imageNames.length;
@@ -50,6 +52,8 @@ export default function useImageEvaluation() {
     },
     [
       activeProjectName,
+      customPrompt,
+      customTemperature,
       setImageEvaluations,
       setIsEvaluating,
       setEvaluatingImageNames,

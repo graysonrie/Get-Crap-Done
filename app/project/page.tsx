@@ -12,6 +12,7 @@ import useProjectImages from "@/components/projects/useProjectImages";
 import useImageEvaluation from "@/components/projects/useImageEvaluation";
 import useProjectFolders from "@/components/projects/useProjectFolders";
 import useOpenAIApiKey from "@/lib/hooks/useOpenAIApiKey";
+import useCustomPrompt from "@/lib/hooks/useCustomPrompt";
 import { useProjectStore } from "@/lib/stores/projectStore";
 
 export default function ProjectPage() {
@@ -22,6 +23,7 @@ export default function ProjectPage() {
   const setSelectedImageNames = useProjectStore((s) => s.setSelectedImageNames);
   const evaluatingImageNames = useProjectStore((s) => s.evaluatingImageNames);
   const { openAIApiKey } = useOpenAIApiKey();
+  useCustomPrompt();
 
   const {
     imagePreviews, selectedImage, imageEvaluations,

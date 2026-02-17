@@ -31,7 +31,8 @@ interface TauriCommands {
   evaluateImages: (
     projectName: string,
     request: RequestImageEvaluation,
-    customPrompt?: string | null
+    customPrompt?: string | null,
+    temperature?: number | null
   ) => Promise<ImageEvaluation[]>;
   getImageEvaluations: (projectName: string) => Promise<ImageEvaluation[]>;
   /** Export the images to their own folder with their new filepath suffixes defined in the ImageEvaluation models. Returns list of error messages (empty on full success). */
@@ -106,11 +107,12 @@ export default function getTauriCommands(): TauriCommands {
         projectName: pn,
         imageNames: names,
       }),
-    evaluateImages: (pn, req, customPrompt) =>
+    evaluateImages: (pn, req, customPrompt, temperature) =>
       invoke<ImageEvaluation[]>("evaluate_images", {
         projectName: pn,
         request: req,
         customPrompt: customPrompt ?? undefined,
+        temperature: temperature ?? undefined,
       }),
     getImageEvaluations: (pn) =>
       invoke<ImageEvaluation[]>("get_image_evaluations", { projectName: pn }),

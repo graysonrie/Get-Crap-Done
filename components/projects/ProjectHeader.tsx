@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Home, ImagePlus, Download, FolderInput } from "lucide-react";
+import { Home, ImagePlus, Download, FolderInput, Settings } from "lucide-react";
+import { useState } from "react";
 import EvaluateDropdown from "./EvaluateDropdown";
+import PromptSettingsModal from "./PromptSettingsModal";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -50,6 +52,8 @@ export function ProjectHeader({
   hasFolderUnevaluatedImages,
   hasFolderImages,
 }: ProjectHeaderProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
     <div className="flex items-center justify-between px-4 py-2 border-b">
       <div className="flex items-center gap-3">
@@ -97,11 +101,23 @@ export function ProjectHeader({
           hasFolderUnevaluatedImages={hasFolderUnevaluatedImages}
           hasFolderImages={hasFolderImages}
         />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setSettingsOpen(true)}
+          title="Prompt Settings"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
         <Button size="sm" onClick={onAddImages} title="Add Images">
           <ImagePlus className="w-4 h-4 shrink-0 sm:mr-2" />
           <span className="hidden sm:inline">Add Images</span>
         </Button>
       </div>
+      <PromptSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
     </div>
   );
 }

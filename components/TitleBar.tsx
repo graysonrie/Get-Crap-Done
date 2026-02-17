@@ -1,10 +1,27 @@
 "use client";
 
-import { Minimize2, Maximize2, X, ListCheck, Magnet, Minimize, Minus, Maximize, Image } from "lucide-react";
+import {
+  Minimize2,
+  Maximize2,
+  X,
+  ListCheck,
+  Magnet,
+  Minimize,
+  Minus,
+  Maximize,
+  Image,
+} from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getVersion } from "@tauri-apps/api/app";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 export function TitleBar() {
+  const [version, setVersion] = useState("");
+
+  useEffect(() => {
+    getVersion().then(setVersion);
+  }, []);
   const handleMinimize = async () => {
     const appWindow = getCurrentWindow();
     await appWindow.minimize();
@@ -25,9 +42,16 @@ export function TitleBar() {
       data-tauri-drag-region
       className="flex h-10 items-center justify-between  bg-background px-4"
     >
-      <div className="flex items-center gap-2 text-primary">
-        <Image className="w-4" />
-        <span className="text-sm font-medium font-sans select-none">Ben's Image Scanner</span>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 text-primary">
+          <Image className="w-4" />
+          <span className="text-sm font-medium font-sans select-none">
+            Ben's Image Scanner
+          </span>
+        </div>
+        {version && (
+          <p className="text-xs text-muted-foreground font-sans">v{version}</p>
+        )}
       </div>
       <div className="flex items-center gap-1">
         <button
