@@ -60,7 +60,7 @@ export default function PromptSettingsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Evaluation Prompt Settings</DialogTitle>
           <DialogDescription>
