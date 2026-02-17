@@ -30,7 +30,8 @@ interface TauriCommands {
   ) => Promise<void>;
   evaluateImages: (
     projectName: string,
-    request: RequestImageEvaluation
+    request: RequestImageEvaluation,
+    customPrompt?: string | null
   ) => Promise<ImageEvaluation[]>;
   getImageEvaluations: (projectName: string) => Promise<ImageEvaluation[]>;
   /** Export the images to their own folder with their new filepath suffixes defined in the ImageEvaluation models. Returns list of error messages (empty on full success). */
@@ -78,39 +79,72 @@ interface TauriCommands {
 
 export default function getTauriCommands(): TauriCommands {
   return {
-    newProject: (pn) => invoke<ProjectInfoModel>("new_project", { projectName: pn }),
-    getProject: (pn) => invoke<ProjectInfoModel>("get_project", { projectName: pn }),
+    newProject: (pn) =>
+      invoke<ProjectInfoModel>("new_project", { projectName: pn }),
+    getProject: (pn) =>
+      invoke<ProjectInfoModel>("get_project", { projectName: pn }),
     getProjectNames: () => invoke<string[]>("get_project_names"),
-    recordProjectOpened: (pn) => invoke("record_project_opened", { projectName: pn }),
+    recordProjectOpened: (pn) =>
+      invoke("record_project_opened", { projectName: pn }),
     getImagePreviewsInProject: (pn) =>
-      invoke<ImagePreviewModel[]>("get_image_previews_in_project", { projectName: pn }),
+      invoke<ImagePreviewModel[]>("get_image_previews_in_project", {
+        projectName: pn,
+      }),
     loadImageFromProject: (pn, img) =>
-      invoke<FullImageModel>("load_image_from_project", { projectName: pn, imageName: img }),
+      invoke<FullImageModel>("load_image_from_project", {
+        projectName: pn,
+        imageName: img,
+      }),
     importImagesToProject: (pn, paths, folder) =>
-      invoke("import_images_to_project", { projectName: pn, imagePaths: paths, folder: folder ?? null }),
+      invoke("import_images_to_project", {
+        projectName: pn,
+        imagePaths: paths,
+        folder: folder ?? null,
+      }),
     deleteImagesFromProject: (pn, names) =>
-      invoke("delete_images_from_project", { projectName: pn, imageNames: names }),
-    evaluateImages: (pn, req) =>
-      invoke<ImageEvaluation[]>("evaluate_images", { projectName: pn, request: req }),
+      invoke("delete_images_from_project", {
+        projectName: pn,
+        imageNames: names,
+      }),
+    evaluateImages: (pn, req, customPrompt) =>
+      invoke<ImageEvaluation[]>("evaluate_images", {
+        projectName: pn,
+        request: req,
+        customPrompt: customPrompt ?? undefined,
+      }),
     getImageEvaluations: (pn) =>
       invoke<ImageEvaluation[]>("get_image_evaluations", { projectName: pn }),
     exportEvaluatedImages: (evals, dir) =>
-      invoke<string[]>("export_evaluated_images", { evaluations: evals, outputDirPath: dir }),
-    openPathInFileManager: (p) => invoke("open_path_in_file_manager", { path: p }),
+      invoke<string[]>("export_evaluated_images", {
+        evaluations: evals,
+        outputDirPath: dir,
+      }),
+    openPathInFileManager: (p) =>
+      invoke("open_path_in_file_manager", { path: p }),
     deleteProject: (pn) => invoke("delete_project", { projectName: pn }),
     archiveProject: (pn) => invoke("archive_project", { projectName: pn }),
     unarchiveProject: (pn) => invoke("unarchive_project", { projectName: pn }),
-    getArchivedProjectNames: () => invoke<string[]>("get_archived_project_names"),
-    deleteArchivedProject: (pn) => invoke("delete_archived_project", { projectName: pn }),
+    getArchivedProjectNames: () =>
+      invoke<string[]>("get_archived_project_names"),
+    deleteArchivedProject: (pn) =>
+      invoke("delete_archived_project", { projectName: pn }),
     createFolderInProject: (pn, fn) =>
       invoke("create_folder_in_project", { projectName: pn, folderName: fn }),
     getFoldersInProject: (pn) =>
       invoke<string[]>("get_folders_in_project", { projectName: pn }),
     renameFolderInProject: (pn, oldFn, newFn) =>
-      invoke("rename_folder_in_project", { projectName: pn, oldFolderName: oldFn, newFolderName: newFn }),
+      invoke("rename_folder_in_project", {
+        projectName: pn,
+        oldFolderName: oldFn,
+        newFolderName: newFn,
+      }),
     deleteFolderFromProject: (pn, fn) =>
       invoke("delete_folder_from_project", { projectName: pn, folderName: fn }),
     moveImagesInProject: (pn, names, target) =>
-      invoke<string[]>("move_images_in_project", { projectName: pn, imageNames: names, targetFolder: target }),
+      invoke<string[]>("move_images_in_project", {
+        projectName: pn,
+        imageNames: names,
+        targetFolder: target,
+      }),
   };
 }

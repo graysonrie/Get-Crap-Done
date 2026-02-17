@@ -132,10 +132,11 @@ pub async fn evaluate_images(
     service: State<'_, Arc<ProjectsService>>,
     project_name: &str,
     request: RequestImageEvaluation,
+    custom_prompt: Option<String>,
 ) -> Result<Vec<ImageEvaluation>, String> {
     service
         .image_evals
-        .evaluate_images(project_name, request)
+        .evaluate_images(project_name, request, custom_prompt)
         .await
 }
 

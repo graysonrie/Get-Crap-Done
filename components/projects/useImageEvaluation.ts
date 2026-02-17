@@ -5,12 +5,15 @@ import { useProjectStore } from "@/lib/stores/projectStore";
 
 export default function useImageEvaluation() {
   const activeProjectName = useProjectStore((s) => s.activeProjectName);
+  const customPrompt = useProjectStore((s) => s.customPrompt);
   const imagePreviews = useProjectStore((s) => s.imagePreviews);
   const selectedImage = useProjectStore((s) => s.selectedImage);
   const imageEvaluations = useProjectStore((s) => s.imageEvaluations);
   const setImageEvaluations = useProjectStore((s) => s.setImageEvaluations);
   const setIsEvaluating = useProjectStore((s) => s.setIsEvaluating);
-  const setEvaluatingImageNames = useProjectStore((s) => s.setEvaluatingImageNames);
+  const setEvaluatingImageNames = useProjectStore(
+    (s) => s.setEvaluatingImageNames
+  );
 
   const evaluateImagesByNames = useCallback(
     async (openAIApiKey: string, imageNames: string[]) => {
@@ -20,10 +23,14 @@ export default function useImageEvaluation() {
       setEvaluatingImageNames(imageNames);
       try {
         const { evaluateImages } = getTauriCommands();
-        const evaluations = await evaluateImages(activeProjectName, {
-          openaiApiKey: openAIApiKey,
-          imageNames,
-        });
+        const evaluations = await evaluateImages(
+          activeProjectName,
+          {
+            openaiApiKey: openAIApiKey,
+            imageNames,
+          },
+          customPrompt
+        );
         setImageEvaluations(evaluations);
         const count = imageNames.length;
         toast.success(
@@ -41,7 +48,12 @@ export default function useImageEvaluation() {
         setEvaluatingImageNames([]);
       }
     },
-    [activeProjectName, setImageEvaluations, setIsEvaluating, setEvaluatingImageNames]
+    [
+      activeProjectName,
+      setImageEvaluations,
+      setIsEvaluating,
+      setEvaluatingImageNames,
+    ]
   );
 
   const evaluateSelectedImage = useCallback(

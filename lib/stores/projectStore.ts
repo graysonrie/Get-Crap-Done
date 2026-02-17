@@ -18,7 +18,8 @@ interface ProjectState {
   isLoadingPreviews: boolean;
   isLoadingFullImage: boolean;
   isEvaluating: boolean;
-
+  customPrompt: string | null;
+  setCustomPrompt: (prompt: string | null) => void;
   setPendingImageCount: (count: number) => void;
   setEvaluatingImageNames: (names: string[]) => void;
   setActiveProject: (projectName: string | null) => void;
@@ -47,6 +48,7 @@ const initialState = {
   isLoadingPreviews: false,
   isLoadingFullImage: false,
   isEvaluating: false,
+  customPrompt: null,
 };
 
 export const useProjectStore = create<ProjectState>((set) => ({
@@ -64,5 +66,6 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setIsLoadingPreviews: (loading) => set({ isLoadingPreviews: loading }),
   setIsLoadingFullImage: (loading) => set({ isLoadingFullImage: loading }),
   setIsEvaluating: (evaluating) => set({ isEvaluating: evaluating }),
+  setCustomPrompt: (prompt) => set({ customPrompt: prompt }),
   reset: () => set(initialState),
 }));
