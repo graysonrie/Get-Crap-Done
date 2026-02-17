@@ -17,10 +17,12 @@ import { useProjectStore } from "@/lib/stores/projectStore";
 import useCustomPrompt from "@/lib/hooks/useCustomPrompt";
 
 const DEFAULT_PROMPT_PREVIEW =
-  "Analyze this image of mechanical equipment. Your task is to:\n\n" +
-  "1. Identify any unit tags, serial numbers, model numbers, or identifying labels visible in the image\n" +
-  "2. Determine what type of equipment this is (HVAC unit, pump, compressor, etc.)\n" +
-  "3. Note any important identifying information";
+  "Analyze this image of mechanical equipment.\n\n" +
+  "1. Identify any unit tags, serial numbers, model numbers, or identifying labels visible in the image.\n" +
+  "2. Determine the equipment type (e.g. HVAC unit, pump, compressor, boiler, electrical panel).\n" +
+  "3. Note any other important identifying information such as manufacturer, capacity ratings, or installation details.\n\n" +
+  "For the filepath_suffix, use the most specific identifier you find (e.g. \"_UNIT_123\", \"_SERIAL_ABC456\", \"_MODEL_XYZ789\"). Prefer unit tags over serial numbers, and serial numbers over model numbers.\n" +
+  "For the brief_description, state the equipment type and mention the identifier you used for the suffix.";
 
 interface PromptSettingsModalProps {
   open: boolean;
