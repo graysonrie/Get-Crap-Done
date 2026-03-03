@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { FolderOpen } from "lucide-react";
 import getTauriCommands from "@/lib/hooks/getTauriCommands";
 import useTauriStore from "@/lib/hooks/useTauriStore";
-import type { ImageEvaluation } from "@/lib/hooks/models";
+import type { ExportMode, ImageEvaluation } from "@/lib/hooks/models";
 
 const STORE_KEY_PREFIX = "lastExportDir_";
 
@@ -24,6 +24,7 @@ interface ExportEvaluationsModalProps {
   onOpenChange: (open: boolean) => void;
   projectName: string;
   evaluations: ImageEvaluation[];
+  mode: ExportMode;
   onExportComplete: (errors: string[], outputPath: string) => void;
 }
 
@@ -32,6 +33,7 @@ export function ExportEvaluationsModal({
   onOpenChange,
   projectName,
   evaluations,
+  mode,
   onExportComplete,
 }: ExportEvaluationsModalProps) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export function ExportEvaluationsModal({
     setIsExporting(true);
     try {
       const { exportEvaluatedImages } = getTauriCommands();
-      const errors = await exportEvaluatedImages(evaluations, selectedPath);
+      const errors = await exportEvaluatedImages(evaluations, selectedPath, mode);
       await setValue(storeKey, selectedPath);
       onOpenChange(false);
       onExportComplete(errors, selectedPath);
@@ -88,10 +90,15 @@ export function ExportEvaluationsModal({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Export evaluated images</DialogTitle>
+          <DialogTitle>
+            {mode === "folders"
+              ? "Export evaluated images by folder"
+              : "Export evaluated images"}
+          </DialogTitle>
           <DialogDescription>
-            Choose a directory to save all {evaluations.length} evaluated image
-            file(s) with their suggested filename suffixes.
+            {mode === "folders"
+              ? `Choose a directory to save ${evaluations.length} evaluated image file(s) while preserving your project folder structure.`
+              : `Choose a directory to save all ${evaluations.length} evaluated image file(s) with their suggested filename suffixes.`}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-2 overflow-hidden">
@@ -127,7 +134,11 @@ export function ExportEvaluationsModal({
             onClick={handleConfirmExport}
             disabled={!selectedPath || isExporting}
           >
-            {isExporting ? "Exporting..." : "Confirm Export"}
+            {isExporting
+              ? "Exporting..."
+              : mode === "folders"
+                ? "Export Folders"
+                : "Confirm Export"}
           </Button>
         </DialogFooter>
       </DialogContent>

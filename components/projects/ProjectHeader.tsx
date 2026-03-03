@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Home, ImagePlus, Download, FolderInput } from "lucide-react";
+import { Home, ImagePlus, FolderInput } from "lucide-react";
 import EvaluateDropdown from "./EvaluateDropdown";
+import ExportDropdown from "./ExportDropdown";
 
 interface ProjectHeaderProps {
   projectName: string;
@@ -16,7 +17,8 @@ interface ProjectHeaderProps {
   onReevaluateAllInFolder: () => void;
   onMoveToFolder: () => void;
   canMoveToFolder: boolean;
-  onExport: () => void;
+  onExportAll: () => void;
+  onExportFolders: () => void;
   isEvaluating: boolean;
   canEvaluateThisImage: boolean;
   hasUnevaluatedImages: boolean;
@@ -39,7 +41,8 @@ export function ProjectHeader({
   onReevaluateAllInFolder,
   onMoveToFolder,
   canMoveToFolder,
-  onExport,
+  onExportAll,
+  onExportFolders,
   isEvaluating,
   canEvaluateThisImage,
   hasUnevaluatedImages,
@@ -62,15 +65,10 @@ export function ProjectHeader({
       </div>
       <div className="flex items-center gap-2">
         {hasEvaluatedImages && (
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={onExport}
-            title="Export"
-          >
-            <Download className="w-4 h-4 shrink-0 sm:mr-2" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
+          <ExportDropdown
+            onExportAll={onExportAll}
+            onExportFolders={onExportFolders}
+          />
         )}
         <Button
           size="sm"

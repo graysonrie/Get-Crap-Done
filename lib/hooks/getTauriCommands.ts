@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  ExportMode,
   FullImageModel,
   ImageEvaluation,
   ImagePreviewModel,
@@ -38,7 +39,8 @@ interface TauriCommands {
   /** Export the images to their own folder with their new filepath suffixes defined in the ImageEvaluation models. Returns list of error messages (empty on full success). */
   exportEvaluatedImages: (
     evaluations: ImageEvaluation[],
-    outputDirPath: string
+    outputDirPath: string,
+    mode: ExportMode
   ) => Promise<string[]>;
   /** Open a path in the system file manager */
   openPathInFileManager: (path: string) => Promise<void>;
@@ -116,10 +118,11 @@ export default function getTauriCommands(): TauriCommands {
       }),
     getImageEvaluations: (pn) =>
       invoke<ImageEvaluation[]>("get_image_evaluations", { projectName: pn }),
-    exportEvaluatedImages: (evals, dir) =>
+    exportEvaluatedImages: (evals, dir, mode) =>
       invoke<string[]>("export_evaluated_images", {
         evaluations: evals,
         outputDirPath: dir,
+        mode,
       }),
     openPathInFileManager: (p) =>
       invoke("open_path_in_file_manager", { path: p }),

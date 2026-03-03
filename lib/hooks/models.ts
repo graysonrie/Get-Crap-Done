@@ -3,6 +3,8 @@ export interface RequestImageEvaluation {
   imageNames: string[];
 }
 
+export type ExportMode = "all" | "folders";
+
 export interface ImageEvaluation {
   imageName: string;
   result: ImageEvaluationResult | undefined;

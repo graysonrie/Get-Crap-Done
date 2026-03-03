@@ -14,6 +14,7 @@ import useProjectFolders from "@/components/projects/useProjectFolders";
 import useOpenAIApiKey from "@/lib/hooks/useOpenAIApiKey";
 import useCustomPrompt from "@/lib/hooks/useCustomPrompt";
 import { useProjectStore } from "@/lib/stores/projectStore";
+import type { ExportMode } from "@/lib/hooks/models";
 
 export default function ProjectPage() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function ProjectPage() {
   const hasFolderUnevaluatedImages = useMemo(() => folderPreviews.some((p) => !evaluatedImageNames.includes(p.imageName)), [folderPreviews, evaluatedImageNames]);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportMode, setExportMode] = useState<ExportMode>("all");
   const [exportResultOpen, setExportResultOpen] = useState(false);
   const [exportResultErrors, setExportResultErrors] = useState<string[]>([]);
   const [exportResultPath, setExportResultPath] = useState("");
@@ -96,7 +98,14 @@ export default function ProjectPage() {
         onReevaluateAllInFolder={() => k && focusedFolder && reevaluateAllInFolder(k, focusedFolder)}
         onMoveToFolder={() => setMoveModalOpen(true)}
         canMoveToFolder={canMoveToFolder}
-        onExport={() => setExportModalOpen(true)}
+        onExportAll={() => {
+          setExportMode("all");
+          setExportModalOpen(true);
+        }}
+        onExportFolders={() => {
+          setExportMode("folders");
+          setExportModalOpen(true);
+        }}
         isEvaluating={isEvaluating}
         canEvaluateThisImage={!!selectedImage && !!k}
         hasUnevaluatedImages={hasUnevaluatedImages}
@@ -107,7 +116,14 @@ export default function ProjectPage() {
         hasFolderUnevaluatedImages={hasFolderUnevaluatedImages}
         hasFolderImages={hasFolderImages}
       />
-      <ExportEvaluationsModal open={exportModalOpen} onOpenChange={setExportModalOpen} projectName={activeProjectName} evaluations={imageEvaluations} onExportComplete={handleExportComplete} />
+      <ExportEvaluationsModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        projectName={activeProjectName}
+        evaluations={imageEvaluations}
+        mode={exportMode}
+        onExportComplete={handleExportComplete}
+      />
       <ExportResultModal open={exportResultOpen} onOpenChange={setExportResultOpen} errors={exportResultErrors} outputPath={exportResultPath} />
       <MoveToFolderModal open={moveModalOpen} onOpenChange={setMoveModalOpen} folders={folders} imageCount={selectedImageNames.length} onConfirm={handleMoveConfirm} />
       <div className="flex flex-1 overflow-hidden">

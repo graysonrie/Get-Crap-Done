@@ -34,7 +34,6 @@ export default function Home() {
           </div>
           <OpenAIApiKeyInput />
         </section>
-
         <section>
           <h2 className="sr-only">Projects</h2>
           <ProjectsViewer />

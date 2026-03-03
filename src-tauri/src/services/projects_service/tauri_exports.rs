@@ -156,10 +156,11 @@ pub async fn export_evaluated_images(
     service: State<'_, Arc<ProjectsService>>,
     evaluations: Vec<ImageEvaluation>,
     output_dir_path: &str,
+    mode: Option<String>,
 ) -> Result<Vec<String>, String> {
     service
         .image_exporter
-        .export_evaluated_images(evaluations, output_dir_path)
+        .export_evaluated_images(evaluations, output_dir_path, mode.as_deref())
         .map_err(|e| e.to_string())
 }
 

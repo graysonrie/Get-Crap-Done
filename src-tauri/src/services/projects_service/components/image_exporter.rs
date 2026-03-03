@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::{fs, path::Path};
+use std::{fs, path::{Component, Path, PathBuf}};
 
 use crate::services::projects_service::models::ImageEvaluation;
 
@@ -14,13 +14,17 @@ impl ImageExporterComponent {
         &self,
         evaluations: Vec<ImageEvaluation>,
         output_dir_path: &str,
+        mode: Option<&str>,
     ) -> Result<Vec<String>, std::io::Error> {
         let out_dir = Path::new(output_dir_path);
         fs::create_dir_all(out_dir)?;
         let mut errors = Vec::new();
-        let mut used_names: HashSet<String> = HashSet::new();
+        let mut used_paths: HashSet<PathBuf> = HashSet::new();
 
         const UNKNOWN_SUFFIX: &str = "";
+        let preserve_folders = mode
+            .map(|m| m.eq_ignore_ascii_case("folders"))
+            .unwrap_or(false);
 
         for eval in evaluations.iter() {
             if let Some(ref res) = eval.result {
@@ -41,18 +45,27 @@ impl ImageExporterComponent {
                     Some(e) => format!("{}.{}", base_without_ext, e),
                     None => base_without_ext.clone(),
                 };
+
+                let destination_dir = if preserve_folders {
+                    Self::destination_dir_for_eval(out_dir, &eval.image_name)
+                } else {
+                    out_dir.to_path_buf()
+                };
+                fs::create_dir_all(&destination_dir)?;
+
                 let mut candidate = base_name.clone();
                 let mut counter = 2u32;
-                while used_names.contains(&candidate) || out_dir.join(&candidate).exists() {
+                let mut candidate_path = destination_dir.join(&candidate);
+                while used_paths.contains(&candidate_path) || candidate_path.exists() {
                     candidate = match &ext {
                         Some(e) => format!("{}_{}.{}", base_without_ext, counter, e),
                         None => format!("{}_{}", base_without_ext, counter),
                     };
+                    candidate_path = destination_dir.join(&candidate);
                     counter += 1;
                 }
-                used_names.insert(candidate.clone());
-                let new_file_path = out_dir.join(&candidate);
-                if let Err(e) = fs::copy(original_path, new_file_path) {
+                used_paths.insert(candidate_path.clone());
+                if let Err(e) = fs::copy(original_path, candidate_path) {
                     log::error!("Error exporting evaluated image: {e}");
                     errors.push(e.to_string());
                 }
@@ -60,5 +73,26 @@ impl ImageExporterComponent {
         }
 
         Ok(errors)
+    }
+
+    fn destination_dir_for_eval(out_dir: &Path, image_name: &str) -> PathBuf {
+        let image_path = Path::new(image_name);
+        let Some(parent) = image_path.parent() else {
+            return out_dir.to_path_buf();
+        };
+        if parent.as_os_str().is_empty() {
+            return out_dir.to_path_buf();
+        }
+        let mut safe_relative = PathBuf::new();
+        for component in parent.components() {
+            if let Component::Normal(part) = component {
+                safe_relative.push(part);
+            }
+        }
+        if safe_relative.as_os_str().is_empty() {
+            out_dir.to_path_buf()
+        } else {
+            out_dir.join(safe_relative)
+        }
     }
 }
