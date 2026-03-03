@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -144,6 +145,11 @@ impl ProjectsService {
     pub fn delete_archived_project(&self, project_name: &str) -> Result<(), String> {
         let relative_path = format!("archived/{project_name}");
         self.app_save.delete_folder(&relative_path)
+    }
+
+    pub fn get_image_full_path(&self, project_name: &str, image_name: &str) -> PathBuf {
+        let relative = format!("projects/{project_name}/images/{image_name}");
+        self.app_save.get_full_path(&relative)
     }
 
     /// Creates a folder inside a project's images directory

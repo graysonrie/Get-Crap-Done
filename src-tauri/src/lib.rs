@@ -31,6 +31,7 @@ pub fn run() {
             get_image_evaluations,
             export_evaluated_images,
             open_path_in_file_manager,
+            open_image_in_default_app,
             record_project_opened,
             delete_project,
             archive_project,

@@ -13,6 +13,7 @@ interface SidebarImageListProps {
   scrollToImageName: string | null;
   onScrollHandled: () => void;
   onImageClick: (imageName: string, e: React.MouseEvent) => void;
+  onOpenExternal: (imageName: string) => void;
   onDeleteImage: (imageName: string) => void;
 }
 
@@ -26,6 +27,7 @@ export default function SidebarImageList({
   scrollToImageName,
   onScrollHandled,
   onImageClick,
+  onOpenExternal,
   onDeleteImage,
 }: SidebarImageListProps) {
   return (
@@ -44,6 +46,7 @@ export default function SidebarImageList({
           shouldScrollIntoView={scrollToImageName === preview.imageName}
           onScrollHandled={onScrollHandled}
           onSelect={(e) => onImageClick(preview.imageName, e)}
+          onOpenExternal={() => onOpenExternal(preview.imageName)}
           onDelete={() => onDeleteImage(preview.imageName)}
         />
       ))}

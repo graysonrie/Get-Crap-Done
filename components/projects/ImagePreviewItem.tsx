@@ -21,6 +21,7 @@ interface ImagePreviewItemProps {
   shouldScrollIntoView: boolean;
   onScrollHandled: () => void;
   onSelect: (e: React.MouseEvent) => void;
+  onOpenExternal: () => void;
   onDelete: () => void;
 }
 
@@ -34,6 +35,7 @@ export function ImagePreviewItem({
   shouldScrollIntoView,
   onScrollHandled,
   onSelect,
+  onOpenExternal,
   onDelete,
 }: ImagePreviewItemProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -55,6 +57,7 @@ export function ImagePreviewItem({
     >
       <button
         onClick={onSelect}
+        onDoubleClick={onOpenExternal}
         className="flex items-center gap-2 flex-1 min-w-0 text-left"
       >
         <div className="relative shrink-0">

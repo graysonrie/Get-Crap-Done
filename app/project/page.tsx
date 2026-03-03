@@ -14,6 +14,7 @@ import useImageEvaluation from "@/components/projects/useImageEvaluation";
 import useProjectFolders from "@/components/projects/useProjectFolders";
 import useOpenAIApiKey from "@/lib/hooks/useOpenAIApiKey";
 import useCustomPrompt from "@/lib/hooks/useCustomPrompt";
+import getTauriCommands from "@/lib/hooks/getTauriCommands";
 import { useProjectStore } from "@/lib/stores/projectStore";
 import type { ExportMode } from "@/lib/hooks/models";
 
@@ -84,6 +85,7 @@ export default function ProjectPage() {
     [moveImagesToFolder, selectedImageNames, refreshFolders, setSelectedImageNames]
   );
   const handleFolderItemSelect = useCallback((imageName: string) => { setSelectedImageNames([imageName]); setLastClickedImageName(imageName); setFocusedFolder(null); setScrollToImageName(imageName); selectImage(imageName); }, [setSelectedImageNames, setLastClickedImageName, setFocusedFolder, selectImage]);
+  const handleOpenExternal = useCallback((imageName: string) => { if (!activeProjectName) return; getTauriCommands().openImageInDefaultApp(activeProjectName, imageName).catch(console.error); }, [activeProjectName]);
 
   if (!activeProjectName) return null;
 
@@ -135,7 +137,7 @@ export default function ProjectPage() {
           imagePreviews={imagePreviews} selectedImage={selectedImage}
           evaluatedImageNames={evaluatedImageNames} evaluatedWithSuffixImageNames={evaluatedWithSuffixImageNames} evaluatingImageNames={evaluatingImageNames}
           isLoading={isLoadingPreviews} folders={folders} focusedFolder={focusedFolder}
-          onSelectImage={selectImage} onDeleteImage={deleteImage}
+          onSelectImage={selectImage} onOpenExternal={handleOpenExternal} onDeleteImage={deleteImage}
           scrollToImageName={scrollToImageName} onScrollHandled={() => setScrollToImageName(null)}
           onFocusFolder={setFocusedFolder} onCreateFolder={createFolder}
           onDeleteFolder={handleDeleteFolder}

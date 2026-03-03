@@ -227,6 +227,42 @@ pub async fn move_images_in_project(
     Ok(new_names)
 }
 
+/// Open a project image in the OS default application
+#[tauri::command]
+pub fn open_image_in_default_app(
+    service: State<'_, Arc<ProjectsService>>,
+    project_name: &str,
+    image_name: &str,
+) -> Result<(), String> {
+    let full_path = service.get_image_full_path(project_name, image_name);
+    open_path_in_default_app(full_path.to_string_lossy().as_ref())
+}
+
+fn open_path_in_default_app(path: &str) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        Command::new("cmd")
+            .args(["/C", "start", "", path])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        Command::new("open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        Command::new("xdg-open")
+            .arg(path)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Open a path (file or directory) in the system's default file manager
 #[tauri::command]
 pub fn open_path_in_file_manager(path: &str) -> Result<(), String> {

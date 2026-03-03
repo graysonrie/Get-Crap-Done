@@ -20,6 +20,7 @@ interface ImageSidebarProps {
   folders: string[];
   focusedFolder: string | null;
   onSelectImage: (imageName: string) => void;
+  onOpenExternal: (imageName: string) => void;
   onDeleteImage: (imageName: string) => void;
   onFocusFolder: (folder: string | null) => void;
   scrollToImageName: string | null;
@@ -33,7 +34,7 @@ export function ImageSidebar({
   imagePreviews, selectedImage,
   evaluatedImageNames, evaluatedWithSuffixImageNames, evaluatingImageNames,
   isLoading, folders, focusedFolder,
-  onSelectImage, onDeleteImage, onFocusFolder,
+  onSelectImage, onOpenExternal, onDeleteImage, onFocusFolder,
   scrollToImageName, onScrollHandled,
   onCreateFolder, onDeleteFolder, onRenameFolder,
 }: ImageSidebarProps) {
@@ -102,7 +103,7 @@ export function ImageSidebar({
     selectedImage, evaluatedImageNames, evaluatedWithSuffixImageNames,
     evaluatingImageNames, selectedImageNames,
     scrollToImageName, onScrollHandled,
-    onImageClick: handleImageClick, onDeleteImage,
+    onImageClick: handleImageClick, onOpenExternal, onDeleteImage,
   };
 
   const totalCount = imagePreviews.length;

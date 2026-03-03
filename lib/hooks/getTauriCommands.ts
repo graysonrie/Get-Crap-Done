@@ -44,6 +44,11 @@ interface TauriCommands {
   ) => Promise<string[]>;
   /** Open a path in the system file manager */
   openPathInFileManager: (path: string) => Promise<void>;
+  /** Open a project image in the OS default application */
+  openImageInDefaultApp: (
+    projectName: string,
+    imageName: string
+  ) => Promise<void>;
   /** Permanently delete a project and all its contents */
   deleteProject: (projectName: string) => Promise<void>;
   /** Archive a project (move to archived folder) */
@@ -126,6 +131,11 @@ export default function getTauriCommands(): TauriCommands {
       }),
     openPathInFileManager: (p) =>
       invoke("open_path_in_file_manager", { path: p }),
+    openImageInDefaultApp: (pn, img) =>
+      invoke("open_image_in_default_app", {
+        projectName: pn,
+        imageName: img,
+      }),
     deleteProject: (pn) => invoke("delete_project", { projectName: pn }),
     archiveProject: (pn) => invoke("archive_project", { projectName: pn }),
     unarchiveProject: (pn) => invoke("unarchive_project", { projectName: pn }),
