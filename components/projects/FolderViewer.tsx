@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderOpen, ListTree } from "lucide-react";
+import { FolderOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface FolderViewerItem {
@@ -11,12 +11,16 @@ interface FolderViewerItem {
 interface FolderViewerProps {
   folderName: string;
   evaluations: FolderViewerItem[];
+  evaluatedCount: number;
+  undeterminedCount: number;
   onSelectImage: (imageName: string) => void;
 }
 
 export function FolderViewer({
   folderName,
   evaluations,
+  evaluatedCount,
+  undeterminedCount,
   onSelectImage,
 }: FolderViewerProps) {
   return (
@@ -25,8 +29,8 @@ export function FolderViewer({
         <div className="shrink-0">
           <h2 className="text-xl font-semibold break-all">{folderName}</h2>
           <p className="text-sm text-muted-foreground">
-            {evaluations.length} evaluated image
-            {evaluations.length === 1 ? "" : "s"}
+            {evaluatedCount} evaluated image{evaluatedCount === 1 ? "" : "s"}.{" "}
+            {undeterminedCount} undetermined
           </p>
         </div>
         {evaluations.length > 0 ? (
@@ -43,11 +47,7 @@ export function FolderViewer({
                       ? item.imageName.slice(folderName.length + 1)
                       : item.imageName}
                   </p>
-                  <p className="text-xs text-primary text-right break-all">
-                    {item.suffix.startsWith("_")
-                      ? item.suffix.slice(1)
-                      : item.suffix}
-                  </p>
+                  <p className="text-xs text-primary text-right break-all">{item.suffix}</p>
                 </div>
               ))}
             </div>
@@ -58,16 +58,14 @@ export function FolderViewer({
               <div className="flex flex-col items-center gap-2 text-center">
                 <FolderOpen className="w-8 h-8 text-muted-foreground" />
                 <p className="text-muted-foreground">
-                  No evaluated images in this folder yet.
+                  {evaluatedCount > 0
+                    ? "No determined suffixes in this folder yet."
+                    : "No evaluated images in this folder yet."}
                 </p>
               </div>
             </Card>
           </div>
         )}
-        {/* <div className="shrink-0 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
-          <ListTree className="w-4 h-4 shrink-0" />
-          Suggested filepath suffixes for evaluated images in this folder.
-        </div> */}
       </div>
     </div>
   );

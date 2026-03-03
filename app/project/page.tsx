@@ -54,7 +54,9 @@ export default function ProjectPage() {
   const folderPreviews = useMemo(() => focusedFolder ? imagePreviews.filter((p) => p.imageName.startsWith(`${focusedFolder}/`)) : [], [focusedFolder, imagePreviews]);
   const hasFolderImages = folderPreviews.length > 0;
   const hasFolderUnevaluatedImages = useMemo(() => folderPreviews.some((p) => !evaluatedImageNames.includes(p.imageName)), [folderPreviews, evaluatedImageNames]);
-  const focusedFolderEvaluations = useMemo(() => focusedFolder ? imageEvaluations.filter((e) => e.imageName.startsWith(`${focusedFolder}/`) && !!e.result).sort((a, b) => a.imageName.localeCompare(b.imageName)).map((e) => ({ imageName: e.imageName, suffix: e.result?.newSuggestedFilepathSuffix?.trim() || "(no suggested suffix)" })) : [], [focusedFolder, imageEvaluations]);
+  const focusedFolderEvaluated = useMemo(() => focusedFolder ? imageEvaluations.filter((e) => e.imageName.startsWith(`${focusedFolder}/`) && !!e.result).sort((a, b) => a.imageName.localeCompare(b.imageName)) : [], [focusedFolder, imageEvaluations]);
+  const focusedFolderEvaluations = useMemo(() => focusedFolderEvaluated.map((e) => ({ imageName: e.imageName, suffix: (e.result?.newSuggestedFilepathSuffix?.trim() || "").replace(/^_/, "").trim() })).filter((e) => e.suffix.length > 0), [focusedFolderEvaluated]);
+  const focusedFolderUndeterminedCount = focusedFolderEvaluated.length - focusedFolderEvaluations.length;
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportMode, setExportMode] = useState<ExportMode>("all");
@@ -140,7 +142,7 @@ export default function ProjectPage() {
           onDeleteFolder={handleDeleteFolder}
           onRenameFolder={handleRenameFolder}
         />
-        {focusedFolder ? <FolderViewer folderName={focusedFolder} evaluations={focusedFolderEvaluations} onSelectImage={handleFolderItemSelect} /> : <ImageViewer selectedImage={selectedImage} evaluation={selectedImageEvaluation} isLoading={isLoadingFullImage} />}
+        {focusedFolder ? <FolderViewer folderName={focusedFolder} evaluations={focusedFolderEvaluations} evaluatedCount={focusedFolderEvaluated.length} undeterminedCount={focusedFolderUndeterminedCount} onSelectImage={handleFolderItemSelect} /> : <ImageViewer selectedImage={selectedImage} evaluation={selectedImageEvaluation} isLoading={isLoadingFullImage} />}
       </div>
     </div>
   );
