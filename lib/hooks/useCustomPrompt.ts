@@ -1,47 +1,38 @@
 import { useCallback, useEffect } from "react";
 import useTauriStore from "./useTauriStore";
-import { useProjectStore } from "@/lib/stores/projectStore";
+import { useSettingsStore } from "@/lib/stores/settingsStore";
 
-function promptKey(projectName: string) {
-  return `customPrompt_${projectName}`;
-}
-
-function temperatureKey(projectName: string) {
-  return `customTemperature_${projectName}`;
-}
+const CUSTOM_PROMPT_KEY = "customPrompt";
+const CUSTOM_TEMPERATURE_KEY = "customTemperature";
 
 export default function useCustomPrompt() {
-  const activeProjectName = useProjectStore((s) => s.activeProjectName);
-  const setCustomPrompt = useProjectStore((s) => s.setCustomPrompt);
-  const setCustomTemperature = useProjectStore((s) => s.setCustomTemperature);
+  const setCustomPrompt = useSettingsStore((s) => s.setCustomPrompt);
+  const setCustomTemperature = useSettingsStore((s) => s.setCustomTemperature);
   const { getValue, setValue } = useTauriStore();
 
   useEffect(() => {
-    if (!activeProjectName) return;
-    getValue<string>(promptKey(activeProjectName)).then((saved) => {
+    getValue<string>(CUSTOM_PROMPT_KEY).then((saved) => {
       setCustomPrompt(saved ?? null);
     });
-    getValue<number>(temperatureKey(activeProjectName)).then((saved) => {
+    getValue<number>(CUSTOM_TEMPERATURE_KEY).then((saved) => {
       setCustomTemperature(saved ?? null);
     });
-  }, [activeProjectName]);
+  }, [setCustomPrompt, setCustomTemperature]);
 
   const saveCustomPrompt = useCallback(
     async (prompt: string | null) => {
-      if (!activeProjectName) return;
       setCustomPrompt(prompt);
-      await setValue(promptKey(activeProjectName), prompt);
+      await setValue(CUSTOM_PROMPT_KEY, prompt);
     },
-    [activeProjectName, setCustomPrompt, setValue]
+    [setCustomPrompt, setValue]
   );
 
   const saveCustomTemperature = useCallback(
     async (temperature: number | null) => {
-      if (!activeProjectName) return;
       setCustomTemperature(temperature);
-      await setValue(temperatureKey(activeProjectName), temperature);
+      await setValue(CUSTOM_TEMPERATURE_KEY, temperature);
     },
-    [activeProjectName, setCustomTemperature, setValue]
+    [setCustomTemperature, setValue]
   );
 
   return { saveCustomPrompt, saveCustomTemperature };

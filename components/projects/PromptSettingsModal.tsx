@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { useProjectStore } from "@/lib/stores/projectStore";
+import { useSettingsStore } from "@/lib/stores/settingsStore";
 import useCustomPrompt from "@/lib/hooks/useCustomPrompt";
 
 const DEFAULT_PROMPT_PREVIEW =
@@ -33,8 +33,8 @@ export default function PromptSettingsModal({
   open: isOpen,
   onOpenChange,
 }: PromptSettingsModalProps) {
-  const customPrompt = useProjectStore((s) => s.customPrompt);
-  const customTemperature = useProjectStore((s) => s.customTemperature);
+  const customPrompt = useSettingsStore((s) => s.customPrompt);
+  const customTemperature = useSettingsStore((s) => s.customTemperature);
   const { saveCustomPrompt, saveCustomTemperature } = useCustomPrompt();
   const [draft, setDraft] = useState("");
   const [tempDraft, setTempDraft] = useState<number | null>(null);

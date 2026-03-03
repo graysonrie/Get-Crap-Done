@@ -18,10 +18,6 @@ interface ProjectState {
   isLoadingPreviews: boolean;
   isLoadingFullImage: boolean;
   isEvaluating: boolean;
-  customPrompt: string | null;
-  customTemperature: number | null;
-  setCustomPrompt: (prompt: string | null) => void;
-  setCustomTemperature: (temperature: number | null) => void;
   setPendingImageCount: (count: number) => void;
   setEvaluatingImageNames: (names: string[]) => void;
   setActiveProject: (projectName: string | null) => void;
@@ -50,8 +46,6 @@ const initialState = {
   isLoadingPreviews: false,
   isLoadingFullImage: false,
   isEvaluating: false,
-  customPrompt: null,
-  customTemperature: null,
 };
 
 export const useProjectStore = create<ProjectState>((set) => ({
@@ -69,7 +63,5 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setIsLoadingPreviews: (loading) => set({ isLoadingPreviews: loading }),
   setIsLoadingFullImage: (loading) => set({ isLoadingFullImage: loading }),
   setIsEvaluating: (evaluating) => set({ isEvaluating: evaluating }),
-  setCustomPrompt: (prompt) => set({ customPrompt: prompt }),
-  setCustomTemperature: (temperature) => set({ customTemperature: temperature }),
   reset: () => set(initialState),
 }));

@@ -1,22 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import OpenAIApiKeyInput from "@/components/OpenAIApiKeyInput";
-import { Card, CardContent } from "@/components/ui/card";
-// when using `"withGlobalTauri": true`, you may use
-// const { enable, isEnabled, disable } = window.__TAURI__.autostart;
 import ProjectsViewer from "@/components/projects/ProjectsViewer";
+import PromptSettingsModal from "@/components/projects/PromptSettingsModal";
 
 export default function Home() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
-    <div className="flex h-[calc(100vh-2.5rem)] flex-col bg-background overflow-hidden font-sans p-2 items-center">
-      <div className="flex flex-col gap-2 max-w-3xl">
-        <div className="flex flex-col gap-2 mx-auto max-w-100">
+    <div className="h-[calc(100vh-2.5rem)] overflow-auto bg-background font-sans">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+        <section className="rounded-lg border bg-card p-4">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">App Settings</h2>
+              <p className="text-xs text-muted-foreground">
+                Prompt settings apply globally across all projects.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSettingsOpen(true)}
+              title="Prompt Settings"
+              className="shrink-0 font-sans text-xs"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Prompt Settings
+            </Button>
+          </div>
           <OpenAIApiKeyInput />
-        </div>
-        <ProjectsViewer />
+        </section>
+
+        <section>
+          <h2 className="sr-only">Projects</h2>
+          <ProjectsViewer />
+        </section>
+
+        <PromptSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
     </div>
   );

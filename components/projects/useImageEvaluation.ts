@@ -2,11 +2,12 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import getTauriCommands from "@/lib/hooks/getTauriCommands";
 import { useProjectStore } from "@/lib/stores/projectStore";
+import { useSettingsStore } from "@/lib/stores/settingsStore";
 
 export default function useImageEvaluation() {
   const activeProjectName = useProjectStore((s) => s.activeProjectName);
-  const customPrompt = useProjectStore((s) => s.customPrompt);
-  const customTemperature = useProjectStore((s) => s.customTemperature);
+  const customPrompt = useSettingsStore((s) => s.customPrompt);
+  const customTemperature = useSettingsStore((s) => s.customTemperature);
   const imagePreviews = useProjectStore((s) => s.imagePreviews);
   const selectedImage = useProjectStore((s) => s.selectedImage);
   const imageEvaluations = useProjectStore((s) => s.imageEvaluations);
