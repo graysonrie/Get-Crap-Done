@@ -10,6 +10,8 @@ interface SidebarImageListProps {
   evaluatedWithSuffixImageNames: string[];
   evaluatingImageNames: string[];
   selectedImageNames: string[];
+  scrollToImageName: string | null;
+  onScrollHandled: () => void;
   onImageClick: (imageName: string, e: React.MouseEvent) => void;
   onDeleteImage: (imageName: string) => void;
 }
@@ -21,6 +23,8 @@ export default function SidebarImageList({
   evaluatedWithSuffixImageNames,
   evaluatingImageNames,
   selectedImageNames,
+  scrollToImageName,
+  onScrollHandled,
   onImageClick,
   onDeleteImage,
 }: SidebarImageListProps) {
@@ -37,6 +41,8 @@ export default function SidebarImageList({
             preview.imageName
           )}
           isBeingEvaluated={evaluatingImageNames.includes(preview.imageName)}
+          shouldScrollIntoView={scrollToImageName === preview.imageName}
+          onScrollHandled={onScrollHandled}
           onSelect={(e) => onImageClick(preview.imageName, e)}
           onDelete={() => onDeleteImage(preview.imageName)}
         />

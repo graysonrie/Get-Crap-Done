@@ -27,19 +27,16 @@ export default function ProjectPage() {
   const evaluatingImageNames = useProjectStore((s) => s.evaluatingImageNames);
   const { openAIApiKey } = useOpenAIApiKey();
   useCustomPrompt();
-
   const {
     imagePreviews, selectedImage, imageEvaluations,
     isLoadingPreviews, isLoadingFullImage, isEvaluating,
     selectImage, addImages, deleteImage, moveImagesToFolder,
     refreshPreviews, refreshEvaluations,
   } = useProjectImages();
-
   const {
     evaluateSelectedImage, evaluateNewImages, reevaluateAll,
     evaluateNewImagesInFolder, reevaluateAllInFolder,
   } = useImageEvaluation();
-
   const {
     folders, focusedFolder, setFocusedFolder,
     createFolder, renameFolder, deleteFolder, refreshFolders,
@@ -64,6 +61,7 @@ export default function ProjectPage() {
   const [exportResultErrors, setExportResultErrors] = useState<string[]>([]);
   const [exportResultPath, setExportResultPath] = useState("");
   const [moveModalOpen, setMoveModalOpen] = useState(false);
+  const [scrollToImageName, setScrollToImageName] = useState<string | null>(null);
   const canMoveToFolder = selectedImageNames.length > 0 && folders.length > 0;
 
   const handleExportComplete = (errors: string[], outputPath: string) => { setExportResultErrors(errors); setExportResultPath(outputPath); setExportResultOpen(true); };
@@ -85,7 +83,7 @@ export default function ProjectPage() {
     },
     [moveImagesToFolder, selectedImageNames, refreshFolders, setSelectedImageNames]
   );
-  const handleFolderItemSelect = useCallback((imageName: string) => { setSelectedImageNames([imageName]); setLastClickedImageName(imageName); setFocusedFolder(null); selectImage(imageName); }, [setSelectedImageNames, setLastClickedImageName, setFocusedFolder, selectImage]);
+  const handleFolderItemSelect = useCallback((imageName: string) => { setSelectedImageNames([imageName]); setLastClickedImageName(imageName); setFocusedFolder(null); setScrollToImageName(imageName); selectImage(imageName); }, [setSelectedImageNames, setLastClickedImageName, setFocusedFolder, selectImage]);
 
   if (!activeProjectName) return null;
 
@@ -138,6 +136,7 @@ export default function ProjectPage() {
           evaluatedImageNames={evaluatedImageNames} evaluatedWithSuffixImageNames={evaluatedWithSuffixImageNames} evaluatingImageNames={evaluatingImageNames}
           isLoading={isLoadingPreviews} folders={folders} focusedFolder={focusedFolder}
           onSelectImage={selectImage} onDeleteImage={deleteImage}
+          scrollToImageName={scrollToImageName} onScrollHandled={() => setScrollToImageName(null)}
           onFocusFolder={setFocusedFolder} onCreateFolder={createFolder}
           onDeleteFolder={handleDeleteFolder}
           onRenameFolder={handleRenameFolder}

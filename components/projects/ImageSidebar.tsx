@@ -22,6 +22,8 @@ interface ImageSidebarProps {
   onSelectImage: (imageName: string) => void;
   onDeleteImage: (imageName: string) => void;
   onFocusFolder: (folder: string | null) => void;
+  scrollToImageName: string | null;
+  onScrollHandled: () => void;
   onCreateFolder: (folderName: string) => Promise<void>;
   onDeleteFolder: (folderName: string) => void;
   onRenameFolder: (oldName: string, newName: string) => void;
@@ -32,6 +34,7 @@ export function ImageSidebar({
   evaluatedImageNames, evaluatedWithSuffixImageNames, evaluatingImageNames,
   isLoading, folders, focusedFolder,
   onSelectImage, onDeleteImage, onFocusFolder,
+  scrollToImageName, onScrollHandled,
   onCreateFolder, onDeleteFolder, onRenameFolder,
 }: ImageSidebarProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -98,6 +101,7 @@ export function ImageSidebar({
   const sharedListProps = {
     selectedImage, evaluatedImageNames, evaluatedWithSuffixImageNames,
     evaluatingImageNames, selectedImageNames,
+    scrollToImageName, onScrollHandled,
     onImageClick: handleImageClick, onDeleteImage,
   };
 

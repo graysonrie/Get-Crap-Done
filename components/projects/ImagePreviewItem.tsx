@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Trash2, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImagePreviewModel } from "@/lib/hooks/models";
@@ -17,6 +18,8 @@ interface ImagePreviewItemProps {
   isEvaluated: boolean;
   hasSuggestedSuffix: boolean;
   isBeingEvaluated: boolean;
+  shouldScrollIntoView: boolean;
+  onScrollHandled: () => void;
   onSelect: (e: React.MouseEvent) => void;
   onDelete: () => void;
 }
@@ -28,11 +31,22 @@ export function ImagePreviewItem({
   isEvaluated,
   hasSuggestedSuffix,
   isBeingEvaluated,
+  shouldScrollIntoView,
+  onScrollHandled,
   onSelect,
   onDelete,
 }: ImagePreviewItemProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!shouldScrollIntoView || !rootRef.current) return;
+    rootRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    onScrollHandled();
+  }, [shouldScrollIntoView, onScrollHandled]);
+
   return (
     <div
+      ref={rootRef}
       className={cn(
         "group flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors",
         isSelected && "bg-primary/15",
