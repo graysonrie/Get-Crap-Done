@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ProjectHeader } from "@/components/projects/ProjectHeader";
 import { ImageSidebar } from "@/components/projects/ImageSidebar";
 import { ImageViewer } from "@/components/projects/ImageViewer";
+import { FolderViewer } from "@/components/projects/FolderViewer";
 import { ExportEvaluationsModal } from "@/components/projects/ExportEvaluationsModal";
 import { ExportResultModal } from "@/components/projects/ExportResultModal";
 import MoveToFolderModal from "@/components/projects/MoveToFolderModal";
@@ -22,6 +23,7 @@ export default function ProjectPage() {
   const reset = useProjectStore((s) => s.reset);
   const selectedImageNames = useProjectStore((s) => s.selectedImageNames);
   const setSelectedImageNames = useProjectStore((s) => s.setSelectedImageNames);
+  const setLastClickedImageName = useProjectStore((s) => s.setLastClickedImageName);
   const evaluatingImageNames = useProjectStore((s) => s.evaluatingImageNames);
   const { openAIApiKey } = useOpenAIApiKey();
   useCustomPrompt();
@@ -52,6 +54,7 @@ export default function ProjectPage() {
   const folderPreviews = useMemo(() => focusedFolder ? imagePreviews.filter((p) => p.imageName.startsWith(`${focusedFolder}/`)) : [], [focusedFolder, imagePreviews]);
   const hasFolderImages = folderPreviews.length > 0;
   const hasFolderUnevaluatedImages = useMemo(() => folderPreviews.some((p) => !evaluatedImageNames.includes(p.imageName)), [folderPreviews, evaluatedImageNames]);
+  const focusedFolderEvaluations = useMemo(() => focusedFolder ? imageEvaluations.filter((e) => e.imageName.startsWith(`${focusedFolder}/`) && !!e.result).sort((a, b) => a.imageName.localeCompare(b.imageName)).map((e) => ({ imageName: e.imageName, suffix: e.result?.newSuggestedFilepathSuffix?.trim() || "(no suggested suffix)" })) : [], [focusedFolder, imageEvaluations]);
 
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportMode, setExportMode] = useState<ExportMode>("all");
@@ -80,6 +83,7 @@ export default function ProjectPage() {
     },
     [moveImagesToFolder, selectedImageNames, refreshFolders, setSelectedImageNames]
   );
+  const handleFolderItemSelect = useCallback((imageName: string) => { setSelectedImageNames([imageName]); setLastClickedImageName(imageName); setFocusedFolder(null); selectImage(imageName); }, [setSelectedImageNames, setLastClickedImageName, setFocusedFolder, selectImage]);
 
   if (!activeProjectName) return null;
 
@@ -136,7 +140,7 @@ export default function ProjectPage() {
           onDeleteFolder={handleDeleteFolder}
           onRenameFolder={handleRenameFolder}
         />
-        <ImageViewer selectedImage={selectedImage} evaluation={selectedImageEvaluation} isLoading={isLoadingFullImage} />
+        {focusedFolder ? <FolderViewer folderName={focusedFolder} evaluations={focusedFolderEvaluations} onSelectImage={handleFolderItemSelect} /> : <ImageViewer selectedImage={selectedImage} evaluation={selectedImageEvaluation} isLoading={isLoadingFullImage} />}
       </div>
     </div>
   );
