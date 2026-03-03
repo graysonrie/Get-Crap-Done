@@ -1,5 +1,7 @@
 use std::process::Command;
 use std::sync::Arc;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 
 use tauri::State;
 
@@ -241,8 +243,10 @@ pub fn open_image_in_default_app(
 fn open_path_in_default_app(path: &str) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         Command::new("cmd")
             .args(["/C", "start", "", path])
+            .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .map_err(|e| e.to_string())?;
     }
